@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SHADO Salud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --verde-boticario:#1F4B43;
+  --verde-claro:#2F6F5E;
+  --crema:#F6F3EA;
+  --papel:#FFFFFF;
+  --coral:#E4572E;
+  --ambar:#C98A2C;
+  --tinta:#1B221F;
+  --gris:#6B756F;
+  --linea:#DCD6C6;
+  --radius:10px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:'Space Grotesk', sans-serif;
+  background:var(--crema);
+  color:var(--tinta);
+  min-height:100vh;
+}
+.font-display{font-family:'Fraunces', serif;}
+.font-mono{font-family:'IBM Plex Mono', monospace;}
+
+/* ---------- LOGIN ---------- */
+#pantalla-login{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(31,75,67,0.08), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(228,87,46,0.06), transparent 40%),
+    var(--crema);
+}
+.login-caja{
+  width:100%;
+  max-width:380px;
+  background:var(--papel);
+  border:1px solid var(--linea);
+  border-radius:var(--radius);
+  padding:36px 28px;
+  position:relative;
+  overflow:hidden;
+}
+.login-caja::before{
+  content:"";
+  position:absolute;
+  top:0; left:0; right:0;
+  height:6px;
+  background:repeating-linear-gradient(90deg, var(--verde-boticario) 0 14px, var(--coral) 14px 16px);
+}
+.login-cruz{
+  width:44px; height:44px;
+  margin-bottom:18px;
+  position:relative;
+}
+.login-cruz::before, .login-cruz::after{
+  content:"";
+  position:absolute;
+  background:var(--verde-boticario);
+}
+.login-cruz::before{ width:44px; height:14px; top:15px; left:0; border-radius:3px;}
+.login-cruz::after{ width:14px; height:44px; top:0; left:15px; border-radius:3px;}
+.login-caja h1{
+  font-size:26px;
+  font-weight:600;
+  letter-spacing:-0.02em;
+  margin-bottom:4px;
+}
+.login-sub{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px;
+  color:var(--gris);
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  margin-bottom:28px;
+}
+.campo{margin-bottom:16px;}
+.campo label{
+  display:block;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--gris);
+  margin-bottom:6px;
+}
+.campo input, .campo select, .campo textarea{
+  width:100%;
+  padding:11px 12px;
+  border:1.5px solid var(--linea);
+  border-radius:6px;
+  font-family:'Space Grotesk', sans-serif;
+  font-size:15px;
+  background:#FCFBF7;
+  color:var(--tinta);
+  transition:border-color .15s;
+}
+.campo input:focus, .campo select:focus, .campo textarea:focus{
+  outline:none;
+  border-color:var(--verde-boticario);
+}
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:12px 20px;
+  border-radius:6px;
+  border:none;
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:600;
+  font-size:14px;
+  cursor:pointer;
+  transition:transform .1s, opacity .15s;
+}
+.btn:active{transform:scale(0.98);}
+.btn-primario{background:var(--verde-boticario); color:#fff; width:100%;}
+.btn-primario:hover{background:var(--verde-claro);}
+.btn-coral{background:var(--coral); color:#fff;}
+.btn-fantasma{background:transparent; color:var(--verde-boticario); border:1.5px solid var(--linea);}
+.btn-fantasma:hover{border-color:var(--verde-boticario);}
+.btn-peligro{background:#fff; color:#B23A1D; border:1.5px solid #E9C4B4;}
+.error-msg{
+  color:#B23A1D;
+  font-size:13px;
+  margin-top:10px;
+  font-family:'IBM Plex Mono', monospace;
+  display:none;
+}
+
+/* ---------- APP ---------- */
+#app{display:none; min-height:100vh;}
+.topbar{
+  background:var(--verde-boticario);
+  color:#fff;
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky; top:0; z-index:50;
+}
+.topbar-marca{display:flex; align-items:center; gap:10px;}
+.topbar-cruz{width:22px; height:22px; position:relative;}
+.topbar-cruz::before,.topbar-cruz::after{content:"";position:absolute;background:#fff;}
+.topbar-cruz::before{width:22px;height:7px;top:7.5px;left:0;border-radius:2px;}
+.topbar-cruz::after{width:7px;height:22px;top:0;left:7.5px;border-radius:2px;}
+.topbar-marca span{font-family:'Fraunces',serif; font-weight:600; font-size:18px;}
+.topbar-user{display:flex; align-items:center; gap:12px; font-size:13px;}
+.topbar-rol{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  text-transform:uppercase;
+  background:rgba(255,255,255,0.15);
+  padding:3px 8px;
+  border-radius:20px;
+  letter-spacing:0.05em;
+}
+.btn-salir{background:transparent; border:1px solid rgba(255,255,255,0.35); color:#fff; padding:6px 12px; font-size:12px; border-radius:6px; cursor:pointer;}
+
+.tabs{
+  display:flex;
+  gap:2px;
+  background:#fff;
+  border-bottom:1px solid var(--linea);
+  overflow-x:auto;
+  position:sticky; top:57px; z-index:40;
+  -webkit-overflow-scrolling:touch;
+}
+.tab-btn{
+  flex:0 0 auto;
+  padding:13px 16px;
+  background:transparent;
+  border:none;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  color:var(--gris);
+  cursor:pointer;
+  border-bottom:3px solid transparent;
+  white-space:nowrap;
+}
+.tab-btn.activa{color:var(--verde-boticario); border-bottom-color:var(--coral);}
+
+.contenido{padding:20px; max-width:1100px; margin:0 auto;}
+.vista{display:none;}
+.vista.activa{display:block; animation:fadein .2s ease;}
+@keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+.encabezado-vista{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px;}
+.encabezado-vista h2{font-family:'Fraunces',serif; font-size:24px; font-weight:600;}
+.encabezado-vista .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gris); margin-bottom:2px;}
+
+.tarjetas-kpi{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;}
+.kpi{background:#fff; border:1px solid var(--linea); border-radius:var(--radius); padding:16px;}
+.kpi .valor{font-family:'Fraunces',serif; font-size:28px; font-weight:600; color:var(--verde-boticario);}
+.kpi .etiqueta{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; color:var(--gris); letter-spacing:0.05em; margin-top:4px;}
+.kpi.alerta .valor{color:var(--coral);}
+
+.panel{background:#fff; border:1px solid var(--linea); border-radius:var(--radius); padding:18px; margin-bottom:16px;}
+.panel-titulo{font-weight:600; font-size:15px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;}
+
+table{width:100%; border-collapse:collapse; font-size:13.5px;}
+th{text-align:left; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--gris); padding:8px 10px; border-bottom:1.5px solid var(--linea);}
+td{padding:10px; border-bottom:1px solid var(--linea); vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+.tabla-wrap{overflow-x:auto;}
+.pill{display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; font-family:'IBM Plex Mono',monospace;}
+.pill-verde{background:#E1EEE8; color:var(--verde-boticario);}
+.pill-coral{background:#FCE3D9; color:#B23A1D;}
+.pill-ambar{background:#F5E6C8; color:#8A5C13;}
+.pill-gris{background:#EAE7DC; color:var(--gris);}
+
+.buscador{width:100%; max-width:280px;}
+
+.modal-fondo{display:none; position:fixed; inset:0; background:rgba(27,34,31,0.5); z-index:100; align-items:flex-start; justify-content:center; padding:24px 16px; overflow-y:auto;}
+.modal-fondo.activa{display:flex;}
+.modal{background:#fff; border-radius:var(--radius); padding:26px; width:100%; max-width:560px; margin-top:20px;}
+.modal h3{font-family:'Fraunces',serif; font-size:20px; margin-bottom:18px;}
+.modal-acciones{display:flex; gap:10px; justify-content:flex-end; margin-top:20px;}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+@media(max-width:520px){.grid-2{grid-template-columns:1fr;}}
+
+.vacio{text-align:center; padding:40px 20px; color:var(--gris);}
+.vacio .icono{font-size:32px; margin-bottom:10px;}
+
+.fab{position:fixed; bottom:22px; right:22px; z-index:60;}
+.badge-stock{font-family:'IBM Plex Mono',monospace; font-size:11px;}
+
+::-webkit-scrollbar{height:6px; width:6px;}
+::-webkit-scrollbar-thumb{background:var(--linea); border-radius:10px;}
+
+.toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--tinta); color:#fff; padding:12px 20px; border-radius:8px; font-size:13.5px; z-index:200; display:none;}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="pantalla-login">
+  <div class="login-caja">
+    <div class="login-cruz"></div>
+    <h1 class="font-display">SHADO Salud</h1>
+    <div class="login-sub">Gestión clínica &amp; farmacia</div>
+    <div class="campo">
+      <label>Usuario</label>
+      <input type="text" id="input-usuario" autocomplete="username" placeholder="usuario">
+    </div>
+    <div class="campo">
+      <label>Contraseña</label>
+      <input type="password" id="input-password" autocomplete="current-password" placeholder="••••••••">
+    </div>
+    <button class="btn btn-primario" onclick="iniciarSesion()">Entrar</button>
+    <div class="error-msg" id="login-error">Usuario o contraseña incorrectos.</div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-marca">
+      <div class="topbar-cruz"></div>
+      <span>SHADO Salud</span>
+    </div>
+    <div class="topbar-user">
+      <span id="usuario-nombre-display"></span>
+      <span class="topbar-rol" id="usuario-rol-display"></span>
+      <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs-nav"></div>
+
+  <div class="contenido">
+
+    <!-- DASHBOARD -->
+    <div class="vista" id="vista-dashboard">
+      <div class="encabezado-vista">
+        <div>
+          <div class="eyebrow">Panel general</div>
+          <h2>Resumen de hoy</h2>
+        </div>
+      </div>
+      <div class="tarjetas-kpi" id="kpi-container"></div>
+      <div class="panel">
+        <div class="panel-titulo">Próximas salud_citas</div>
+        <div class="tabla-wrap"><table id="tabla-dashboard-salud_citas"><thead><tr><th>Hora</th><th>Paciente</th><th>Doctor</th><th>Estado</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="panel">
+        <div class="panel-titulo">Alertas de inventario</div>
+        <div class="tabla-wrap"><table id="tabla-dashboard-alertas"><thead><tr><th>Producto</th><th>Stock</th><th>Vence</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PACIENTES -->
+    <div class="vista" id="vista-salud_pacientes">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Expedientes</div><h2>Pacientes</h2></div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-paciente" placeholder="Buscar por nombre o cédula..." oninput="renderPacientes()">
+          <button class="btn btn-coral" onclick="abrirModalPaciente()">+ Nuevo paciente</button>
+        </div>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_pacientes"><thead><tr><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Alergias</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- CITAS -->
+    <div class="vista" id="vista-salud_citas">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Agenda</div><h2>Citas</h2></div>
+        <button class="btn btn-coral" onclick="abrirModalCita()">+ Nueva cita</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_citas"><thead><tr><th>Fecha</th><th>Paciente</th><th>Doctor</th><th>Motivo</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- HISTORIALES -->
+    <div class="vista" id="vista-salud_historiales">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Registro médico</div><h2>Historiales clínicos</h2></div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-historial" placeholder="Buscar paciente..." oninput="renderHistoriales()">
+          <button class="btn btn-coral" onclick="abrirModalHistorial()">+ Nuevo registro</button>
+        </div>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_historiales"><thead><tr><th>Fecha</th><th>Paciente</th><th>Diagnóstico</th><th>Doctor</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- INVENTARIO -->
+    <div class="vista" id="vista-inventario">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Farmacia</div><h2>Inventario</h2></div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-producto" placeholder="Buscar producto..." oninput="renderInventario()">
+          <button class="btn btn-coral" onclick="abrirModalProducto()">+ Nuevo producto</button>
+        </div>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-inventario"><thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Vence</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- FACTURACION -->
+    <div class="vista" id="vista-facturacion">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Punto de venta</div><h2>Facturación</h2></div>
+        <button class="btn btn-coral" onclick="abrirModalFactura()">+ Nueva factura</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_facturas"><thead><tr><th>NCF</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- REPORTES -->
+    <div class="vista" id="vista-reportes">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Analítica</div><h2>Reportes</h2></div>
+      </div>
+      <div class="tarjetas-kpi" id="kpi-reportes"></div>
+      <div class="panel">
+        <div class="panel-titulo">Productos más vendidos</div>
+        <div class="tabla-wrap"><table id="tabla-reporte-salud_productos"><thead><tr><th>Producto</th><th>Unidades vendidas</th><th>Ingresos</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="panel">
+        <div class="panel-titulo">Vencimientos próximos (30 días)</div>
+        <div class="tabla-wrap"><table id="tabla-reporte-vencimientos"><thead><tr><th>Producto</th><th>Lote</th><th>Vence</th><th>Stock</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- USUARIOS (solo admin) -->
+    <div class="vista" id="vista-salud_usuarios">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Administración</div><h2>Usuarios</h2></div>
+        <button class="btn btn-coral" onclick="abrirModalUsuario()">+ Nuevo usuario</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_usuarios"><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ MODALES (se inyectan por JS) ============ -->
+<div class="modal-fondo" id="modal-fondo"><div class="modal" id="modal-contenido"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN SUPABASE — reemplaza con tus credenciales
+   ============================================================ */
+const SUPABASE_URL = "https://mvxhssmljaxoxijkviml.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_5UXJ5Ini-9tqW5yng16Svw_321XEnaS";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+<script>
+/* ============================================================
+   SHADO SALUD — Lógica de la aplicación
+   ============================================================ */
+
+let usuarioActual = null;
+let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[] };
+
+const TABS_POR_ROL = {
+  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','inventario','facturacion','reportes','salud_usuarios'],
+  doctor:       ['dashboard','salud_pacientes','salud_citas','salud_historiales'],
+  farmaceutico: ['dashboard','inventario','facturacion','reportes'],
+  cajero:       ['dashboard','facturacion']
+};
+const NOMBRE_TAB = {
+  dashboard:'Panel', salud_pacientes:'Pacientes', salud_citas:'Citas', salud_historiales:'Historiales',
+  inventario:'Inventario', facturacion:'Facturación', reportes:'Reportes', salud_usuarios:'Usuarios'
+};
+
+function mostrarToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(()=> t.style.display='none', 2600);
+}
+
+/* ---------------- AUTENTICACIÓN ---------------- */
+async function iniciarSesion(){
+  const usuario = document.getElementById('input-usuario').value.trim();
+  const password = document.getElementById('input-password').value;
+  const errBox = document.getElementById('login-error');
+  errBox.style.display = 'none';
+
+  if(!usuario || !password){
+    errBox.textContent = 'Ingresa usuario y contraseña.';
+    errBox.style.display = 'block';
+    return;
+  }
+
+  const { data, error } = await sb.from('salud_usuarios').select('*')
+    .eq('usuario', usuario).eq('password', password).eq('activo', true).maybeSingle();
+
+  if(error || !data){
+    errBox.textContent = 'Usuario o contraseña incorrectos.';
+    errBox.style.display = 'block';
+    return;
+  }
+
+  usuarioActual = data;
+  sessionStorage.setItem('shado_salud_user', JSON.stringify(data));
+  entrarAlApp();
+}
+
+function cerrarSesion(){
+  usuarioActual = null;
+  sessionStorage.removeItem('shado_salud_user');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('pantalla-login').style.display = 'flex';
+  document.getElementById('input-usuario').value = '';
+  document.getElementById('input-password').value = '';
+}
+
+function entrarAlApp(){
+  document.getElementById('pantalla-login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('usuario-nombre-display').textContent = usuarioActual.nombre;
+  document.getElementById('usuario-rol-display').textContent = usuarioActual.rol;
+  construirTabs();
+  cargarTodo();
+}
+
+function construirTabs(){
+  const tabs = TABS_POR_ROL[usuarioActual.rol] || ['dashboard'];
+  const nav = document.getElementById('tabs-nav');
+  nav.innerHTML = tabs.map((t,i)=>
+    `<button class="tab-btn ${i===0?'activa':''}" data-tab="${t}" onclick="cambiarTab('${t}')">${NOMBRE_TAB[t]}</button>`
+  ).join('');
+  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
+  document.getElementById('vista-'+tabs[0]).classList.add('activa');
+}
+
+function cambiarTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('activa', b.dataset.tab===tab));
+  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
+  document.getElementById('vista-'+tab).classList.add('activa');
+}
+
+/* al cargar la página, revisar sesión guardada */
+window.addEventListener('DOMContentLoaded', ()=>{
+  const guardado = sessionStorage.getItem('shado_salud_user');
+  if(guardado){
+    usuarioActual = JSON.parse(guardado);
+    entrarAlApp();
+  }
+});
+
+/* ---------------- CARGA DE DATOS ---------------- */
+async function cargarTodo(){
+  const [p, c, h, pr, f, u] = await Promise.all([
+    sb.from('salud_pacientes').select('*').order('nombre'),
+    sb.from('salud_citas').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}),
+    sb.from('salud_historiales').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}),
+    sb.from('salud_productos').select('*').order('nombre'),
+    sb.from('salud_facturas').select('*, salud_pacientes(nombre)').order('creado_en', {ascending:false}),
+    sb.from('salud_usuarios').select('*').order('nombre')
+  ]);
+  cache.salud_pacientes = p.data || [];
+  cache.salud_citas = c.data || [];
+  cache.salud_historiales = h.data || [];
+  cache.salud_productos = pr.data || [];
+  cache.salud_facturas = f.data || [];
+  cache.salud_usuarios = u.data || [];
+
+  renderDashboard();
+  renderPacientes();
+  renderCitas();
+  renderHistoriales();
+  renderInventario();
+  renderFacturas();
+  renderReportes();
+  renderUsuarios();
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashboard(){
+  const hoy = new Date().toISOString().slice(0,10);
+  const citasHoy = cache.salud_citas.filter(c => c.fecha && c.fecha.slice(0,10)===hoy);
+  const stockBajo = cache.salud_productos.filter(p => p.stock <= p.stock_minimo);
+  const ventasHoy = cache.salud_facturas.filter(f => f.creado_en && f.creado_en.slice(0,10)===hoy && f.estado==='completada');
+  const totalHoy = ventasHoy.reduce((s,f)=>s+Number(f.total||0),0);
+
+  document.getElementById('kpi-container').innerHTML = `
+    <div class="kpi"><div class="valor">${citasHoy.length}</div><div class="etiqueta">Citas hoy</div></div>
+    <div class="kpi"><div class="valor">RD$ ${totalHoy.toFixed(0)}</div><div class="etiqueta">Ventas hoy</div></div>
+    <div class="kpi ${stockBajo.length?'alerta':''}"><div class="valor">${stockBajo.length}</div><div class="etiqueta">Stock bajo</div></div>
+    <div class="kpi"><div class="valor">${cache.salud_pacientes.length}</div><div class="etiqueta">Pacientes totales</div></div>
+  `;
+
+  const tbCitas = document.querySelector('#tabla-dashboard-salud_citas tbody');
+  tbCitas.innerHTML = citasHoy.length ? citasHoy.map(c=>`
+    <tr><td>${formatoHora(c.fecha)}</td><td>${c.salud_pacientes?.nombre||'—'}</td><td>${c.salud_usuarios?.nombre||'—'}</td><td>${pillEstado(c.estado)}</td></tr>
+  `).join('') : `<tr><td colspan="4" class="vacio">No hay salud_citas programadas para hoy.</td></tr>`;
+
+  const tbAlertas = document.querySelector('#tabla-dashboard-alertas tbody');
+  tbAlertas.innerHTML = stockBajo.length ? stockBajo.map(p=>`
+    <tr><td>${p.nombre}</td><td><span class="badge-stock">${p.stock} / mín. ${p.stock_minimo}</span></td><td>${p.fecha_vencimiento||'—'}</td></tr>
+  `).join('') : `<tr><td colspan="3" class="vacio">Inventario en niveles normales.</td></tr>`;
+}
+
+function pillEstado(estado){
+  const map = {pendiente:'pill-ambar', atendida:'pill-verde', cancelada:'pill-coral', no_asistio:'pill-gris',
+               completada:'pill-verde', anulada:'pill-coral'};
+  return `<span class="pill ${map[estado]||'pill-gris'}">${estado.replace('_',' ')}</span>`;
+}
+function formatoHora(iso){ if(!iso) return '—'; const d=new Date(iso); return d.toLocaleString('es-DO',{dateStyle:'short',timeStyle:'short'}); }
+function formatoMoneda(n){ return 'RD$ ' + Number(n||0).toLocaleString('es-DO',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+/* ---------------- MODAL genérico ---------------- */
+function abrirModal(html){
+  document.getElementById('modal-contenido').innerHTML = html;
+  document.getElementById('modal-fondo').classList.add('activa');
+}
+function cerrarModal(){
+  document.getElementById('modal-fondo').classList.remove('activa');
+}
+
+/* ================= PACIENTES ================= */
+function renderPacientes(){
+  const filtro = (document.getElementById('buscar-paciente')?.value||'').toLowerCase();
+  const lista = cache.salud_pacientes.filter(p => p.nombre.toLowerCase().includes(filtro) || (p.cedula||'').includes(filtro));
+  const tb = document.querySelector('#tabla-salud_pacientes tbody');
+  tb.innerHTML = lista.length ? lista.map(p=>`
+    <tr>
+      <td><strong>${p.nombre}</strong></td>
+      <td>${p.cedula||'—'}</td>
+      <td>${p.telefono||'—'}</td>
+      <td>${p.alergias||'—'}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalPaciente('${p.id}')">Editar</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="5" class="vacio">Sin salud_pacientes registrados aún.</td></tr>`;
+}
+
+function abrirModalPaciente(id){
+  const p = id ? cache.salud_pacientes.find(x=>x.id===id) : null;
+  abrirModal(`
+    <h3>${p?'Editar paciente':'Nuevo paciente'}</h3>
+    <div class="grid-2">
+      <div class="campo"><label>Nombre completo</label><input id="pf-nombre" value="${p?.nombre||''}"></div>
+      <div class="campo"><label>Cédula</label><input id="pf-cedula" value="${p?.cedula||''}"></div>
+      <div class="campo"><label>Teléfono</label><input id="pf-telefono" value="${p?.telefono||''}"></div>
+      <div class="campo"><label>Fecha de nacimiento</label><input type="date" id="pf-fnac" value="${p?.fecha_nacimiento||''}"></div>
+      <div class="campo"><label>Sexo</label>
+        <select id="pf-sexo"><option value="">—</option><option value="M" ${p?.sexo==='M'?'selected':''}>Masculino</option><option value="F" ${p?.sexo==='F'?'selected':''}>Femenino</option></select>
+      </div>
+      <div class="campo"><label>Contacto de emergencia</label><input id="pf-emergencia" value="${p?.contacto_emergencia||''}"></div>
+    </div>
+    <div class="campo"><label>Dirección</label><input id="pf-direccion" value="${p?.direccion||''}"></div>
+    <div class="campo"><label>Alergias</label><input id="pf-alergias" value="${p?.alergias||''}"></div>
+    <div class="campo"><label>Condiciones crónicas</label><input id="pf-condiciones" value="${p?.condiciones_cronicas||''}"></div>
+    <div class="modal-acciones">
+      ${p?`<button class="btn btn-peligro" onclick="eliminarPaciente('${p.id}')">Eliminar</button>`:''}
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarPaciente(${p?`'${p.id}'`:'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarPaciente(id){
+  const registro = {
+    nombre: document.getElementById('pf-nombre').value.trim(),
+    cedula: document.getElementById('pf-cedula').value.trim(),
+    telefono: document.getElementById('pf-telefono').value.trim(),
+    fecha_nacimiento: document.getElementById('pf-fnac').value || null,
+    sexo: document.getElementById('pf-sexo').value || null,
+    contacto_emergencia: document.getElementById('pf-emergencia').value.trim(),
+    direccion: document.getElementById('pf-direccion').value.trim(),
+    alergias: document.getElementById('pf-alergias').value.trim(),
+    condiciones_cronicas: document.getElementById('pf-condiciones').value.trim(),
+  };
+  if(!registro.nombre){ mostrarToast('El nombre es obligatorio.'); return; }
+
+  const { error } = id ? await sb.from('salud_pacientes').update(registro).eq('id', id)
+                        : await sb.from('salud_pacientes').insert(registro);
+  if(error){ mostrarToast('Error al guardar: '+error.message); return; }
+  cerrarModal(); mostrarToast('Paciente guardado.'); cargarTodo();
+}
+
+async function eliminarPaciente(id){
+  if(!confirm('¿Eliminar este paciente y su historial asociado?')) return;
+  const { error } = await sb.from('salud_pacientes').delete().eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  cerrarModal(); mostrarToast('Paciente eliminado.'); cargarTodo();
+}
+
+/* ================= CITAS ================= */
+function renderCitas(){
+  const tb = document.querySelector('#tabla-salud_citas tbody');
+  tb.innerHTML = cache.salud_citas.length ? cache.salud_citas.map(c=>`
+    <tr>
+      <td>${formatoHora(c.fecha)}</td>
+      <td>${c.salud_pacientes?.nombre||'—'}</td>
+      <td>${c.salud_usuarios?.nombre||'—'}</td>
+      <td>${c.motivo||'—'}</td>
+      <td>${pillEstado(c.estado)}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalCita('${c.id}')">Editar</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="6" class="vacio">No hay salud_citas registradas.</td></tr>`;
+}
+
+function abrirModalCita(id){
+  const c = id ? cache.salud_citas.find(x=>x.id===id) : null;
+  const doctores = cache.salud_usuarios.filter(u=>u.rol==='doctor' || u.rol==='admin');
+  abrirModal(`
+    <h3>${c?'Editar cita':'Nueva cita'}</h3>
+    <div class="campo"><label>Paciente</label>
+      <select id="cf-paciente">${cache.salud_pacientes.map(p=>`<option value="${p.id}" ${c?.paciente_id===p.id?'selected':''}>${p.nombre}</option>`).join('')}</select>
+    </div>
+    <div class="grid-2">
+      <div class="campo"><label>Doctor</label>
+        <select id="cf-doctor">${doctores.map(d=>`<option value="${d.id}" ${c?.doctor_id===d.id?'selected':''}>${d.nombre}</option>`).join('')}</select>
+      </div>
+      <div class="campo"><label>Fecha y hora</label><input type="datetime-local" id="cf-fecha" value="${c?.fecha?c.fecha.slice(0,16):''}"></div>
+    </div>
+    <div class="campo"><label>Motivo</label><input id="cf-motivo" value="${c?.motivo||''}"></div>
+    <div class="campo"><label>Estado</label>
+      <select id="cf-estado">
+        ${['pendiente','atendida','cancelada','no_asistio'].map(e=>`<option value="${e}" ${c?.estado===e?'selected':''}>${e.replace('_',' ')}</option>`).join('')}
+      </select>
+    </div>
+    <div class="campo"><label>Notas</label><textarea id="cf-notas" rows="2">${c?.notas||''}</textarea></div>
+    <div class="modal-acciones">
+      ${c?`<button class="btn btn-peligro" onclick="eliminarCita('${c.id}')">Eliminar</button>`:''}
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarCita(${c?`'${c.id}'`:'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarCita(id){
+  const registro = {
+    paciente_id: document.getElementById('cf-paciente').value,
+    doctor_id: document.getElementById('cf-doctor').value,
+    fecha: document.getElementById('cf-fecha').value,
+    motivo: document.getElementById('cf-motivo').value.trim(),
+    estado: document.getElementById('cf-estado').value,
+    notas: document.getElementById('cf-notas').value.trim(),
+  };
+  if(!registro.paciente_id || !registro.fecha){ mostrarToast('Paciente y fecha son obligatorios.'); return; }
+
+  const { error } = id ? await sb.from('salud_citas').update(registro).eq('id', id)
+                        : await sb.from('salud_citas').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  cerrarModal(); mostrarToast('Cita guardada.'); cargarTodo();
+}
+
+async function eliminarCita(id){
+  if(!confirm('¿Eliminar esta cita?')) return;
+  const { error } = await sb.from('salud_citas').delete().eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  cerrarModal(); mostrarToast('Cita eliminada.'); cargarTodo();
+}
+
+/* ================= HISTORIALES ================= */
+function renderHistoriales(){
+  const filtro = (document.getElementById('buscar-historial')?.value||'').toLowerCase();
+  const lista = cache.salud_historiales.filter(h => (h.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
+  const tb = document.querySelector('#tabla-salud_historiales tbody');
+  tb.innerHTML = lista.length ? lista.map(h=>`
+    <tr>
+      <td>${formatoHora(h.fecha)}</td>
+      <td>${h.salud_pacientes?.nombre||'—'}</td>
+      <td>${h.diagnostico||'—'}</td>
+      <td>${h.salud_usuarios?.nombre||'—'}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalHistorial('${h.id}')">Ver / Editar</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="5" class="vacio">Sin registros clínicos aún.</td></tr>`;
+}
+
+function abrirModalHistorial(id){
+  const h = id ? cache.salud_historiales.find(x=>x.id===id) : null;
+  abrirModal(`
+    <h3>${h?'Editar historial':'Nuevo registro clínico'}</h3>
+    <div class="campo"><label>Paciente</label>
+      <select id="hf-paciente">${cache.salud_pacientes.map(p=>`<option value="${p.id}" ${h?.paciente_id===p.id?'selected':''}>${p.nombre}</option>`).join('')}</select>
+    </div>
+    <div class="grid-2">
+      <div class="campo"><label>Presión arterial</label><input id="hf-presion" placeholder="120/80" value="${h?.signos_vitales?.presion||''}"></div>
+      <div class="campo"><label>Peso (kg)</label><input id="hf-peso" placeholder="70" value="${h?.signos_vitales?.peso||''}"></div>
+      <div class="campo"><label>Temperatura (°C)</label><input id="hf-temp" placeholder="36.5" value="${h?.signos_vitales?.temperatura||''}"></div>
+    </div>
+    <div class="campo"><label>Diagnóstico</label><textarea id="hf-diagnostico" rows="2">${h?.diagnostico||''}</textarea></div>
+    <div class="campo"><label>Tratamiento</label><textarea id="hf-tratamiento" rows="2">${h?.tratamiento||''}</textarea></div>
+    <div class="campo"><label>Receta</label><textarea id="hf-receta" rows="2">${h?.receta||''}</textarea></div>
+    <div class="campo"><label>Observaciones</label><textarea id="hf-observaciones" rows="2">${h?.observaciones||''}</textarea></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarHistorial(${h?`'${h.id}'`:'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarHistorial(id){
+  const registro = {
+    paciente_id: document.getElementById('hf-paciente').value,
+    doctor_id: usuarioActual.id,
+    diagnostico: document.getElementById('hf-diagnostico').value.trim(),
+    tratamiento: document.getElementById('hf-tratamiento').value.trim(),
+    receta: document.getElementById('hf-receta').value.trim(),
+    observaciones: document.getElementById('hf-observaciones').value.trim(),
+    signos_vitales: {
+      presion: document.getElementById('hf-presion').value.trim(),
+      peso: document.getElementById('hf-peso').value.trim(),
+      temperatura: document.getElementById('hf-temp').value.trim(),
+    }
+  };
+  if(!registro.paciente_id){ mostrarToast('Selecciona un paciente.'); return; }
+
+  const { error } = id ? await sb.from('salud_historiales').update(registro).eq('id', id)
+                        : await sb.from('salud_historiales').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  cerrarModal(); mostrarToast('Historial guardado.'); cargarTodo();
+}
+
+/* ================= INVENTARIO ================= */
+function renderInventario(){
+  const filtro = (document.getElementById('buscar-producto')?.value||'').toLowerCase();
+  const lista = cache.salud_productos.filter(p => p.nombre.toLowerCase().includes(filtro));
+  const tb = document.querySelector('#tabla-inventario tbody');
+  tb.innerHTML = lista.length ? lista.map(p=>{
+    const bajo = p.stock <= p.stock_minimo;
+    const vencProx = p.fecha_vencimiento && (new Date(p.fecha_vencimiento) - new Date()) < 1000*60*60*24*30;
+    return `<tr>
+      <td><strong>${p.nombre}</strong><br><span style="color:var(--gris); font-size:12px;">${p.presentacion||''}</span></td>
+      <td>${p.categoria||'—'}</td>
+      <td>${formatoMoneda(p.precio_venta)}</td>
+      <td>${bajo?`<span class="pill pill-coral">${p.stock}</span>`:p.stock}</td>
+      <td>${vencProx?`<span class="pill pill-ambar">${p.fecha_vencimiento}</span>`:(p.fecha_vencimiento||'—')}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalProducto('${p.id}')">Editar</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" class="vacio">Sin salud_productos en inventario.</td></tr>`;
+}
+
+function abrirModalProducto(id){
+  const p = id ? cache.salud_productos.find(x=>x.id===id) : null;
+  abrirModal(`
+    <h3>${p?'Editar producto':'Nuevo producto'}</h3>
+    <div class="campo"><label>Nombre</label><input id="prf-nombre" value="${p?.nombre||''}"></div>
+    <div class="grid-2">
+      <div class="campo"><label>Categoría</label><input id="prf-categoria" value="${p?.categoria||''}"></div>
+      <div class="campo"><label>Presentación</label><input id="prf-presentacion" placeholder="tableta, jarabe..." value="${p?.presentacion||''}"></div>
+      <div class="campo"><label>Laboratorio</label><input id="prf-lab" value="${p?.laboratorio||''}"></div>
+      <div class="campo"><label>Lote</label><input id="prf-lote" value="${p?.lote||''}"></div>
+      <div class="campo"><label>Precio de compra</label><input type="number" step="0.01" id="prf-pcompra" value="${p?.precio_compra||0}"></div>
+      <div class="campo"><label>Precio de venta</label><input type="number" step="0.01" id="prf-pventa" value="${p?.precio_venta||0}"></div>
+      <div class="campo"><label>Stock actual</label><input type="number" id="prf-stock" value="${p?.stock||0}"></div>
+      <div class="campo"><label>Stock mínimo</label><input type="number" id="prf-stockmin" value="${p?.stock_minimo||5}"></div>
+      <div class="campo"><label>Fecha de vencimiento</label><input type="date" id="prf-vencimiento" value="${p?.fecha_vencimiento||''}"></div>
+      <div class="campo"><label>ITBIS aplica</label><select id="prf-itbis"><option value="true" ${p?.itbis_aplica!==false?'selected':''}>Sí</option><option value="false" ${p?.itbis_aplica===false?'selected':''}>No</option></select></div>
+    </div>
+    <div class="modal-acciones">
+      ${p?`<button class="btn btn-peligro" onclick="eliminarProducto('${p.id}')">Eliminar</button>`:''}
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarProducto(${p?`'${p.id}'`:'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarProducto(id){
+  const registro = {
+    nombre: document.getElementById('prf-nombre').value.trim(),
+    categoria: document.getElementById('prf-categoria').value.trim(),
+    presentacion: document.getElementById('prf-presentacion').value.trim(),
+    laboratorio: document.getElementById('prf-lab').value.trim(),
+    lote: document.getElementById('prf-lote').value.trim(),
+    precio_compra: Number(document.getElementById('prf-pcompra').value)||0,
+    precio_venta: Number(document.getElementById('prf-pventa').value)||0,
+    stock: Number(document.getElementById('prf-stock').value)||0,
+    stock_minimo: Number(document.getElementById('prf-stockmin').value)||0,
+    fecha_vencimiento: document.getElementById('prf-vencimiento').value || null,
+    itbis_aplica: document.getElementById('prf-itbis').value === 'true',
+  };
+  if(!registro.nombre){ mostrarToast('El nombre es obligatorio.'); return; }
+
+  const { error } = id ? await sb.from('salud_productos').update(registro).eq('id', id)
+                        : await sb.from('salud_productos').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  cerrarModal(); mostrarToast('Producto guardado.'); cargarTodo();
+}
+
+async function eliminarProducto(id){
+  if(!confirm('¿Eliminar este producto del inventario?')) return;
+  const { error } = await sb.from('salud_productos').delete().eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  cerrarModal(); mostrarToast('Producto eliminado.'); cargarTodo();
+}
+
+/* ================= FACTURACIÓN (con NCF) ================= */
+let itemsFacturaTemp = [];
+
+function renderFacturas(){
+  const tb = document.querySelector('#tabla-salud_facturas tbody');
+  tb.innerHTML = cache.salud_facturas.length ? cache.salud_facturas.map(f=>`
+    <tr>
+      <td class="font-mono">${f.ncf||'—'}</td>
+      <td>${formatoHora(f.creado_en)}</td>
+      <td>${f.salud_pacientes?.nombre || f.cliente_nombre || 'Cliente al detalle'}</td>
+      <td>${formatoMoneda(f.total)}</td>
+      <td>${pillEstado(f.estado)}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verFactura('${f.id}')">Ver</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="6" class="vacio">No se han emitido salud_facturas.</td></tr>`;
+}
+
+function abrirModalFactura(){
+  itemsFacturaTemp = [];
+  abrirModal(`
+    <h3>Nueva factura</h3>
+    <div class="grid-2">
+      <div class="campo"><label>Tipo de e-CF</label>
+        <select id="ff-tipo">
+          <option value="B02">B02 - Consumo</option>
+          <option value="B01">B01 - Crédito Fiscal</option>
+          <option value="B14">B14 - Régimen Especial</option>
+          <option value="B15">B15 - Gubernamental</option>
+        </select>
+      </div>
+      <div class="campo"><label>Método de pago</label>
+        <select id="ff-metodo">
+          <option value="efectivo">Efectivo</option>
+          <option value="tarjeta">Tarjeta</option>
+          <option value="transferencia">Transferencia</option>
+          <option value="seguro">Seguro</option>
+        </select>
+      </div>
+    </div>
+    <div class="campo"><label>Paciente (opcional)</label>
+      <select id="ff-paciente"><option value="">Cliente al detalle</option>${cache.salud_pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('')}</select>
+    </div>
+    <div class="grid-2">
+      <div class="campo"><label>Nombre del cliente</label><input id="ff-cliente-nombre" placeholder="Si no es paciente registrado"></div>
+      <div class="campo"><label>Cédula/RNC</label><input id="ff-cliente-doc"></div>
+    </div>
+    <hr style="border:none; border-top:1px solid var(--linea); margin:16px 0;">
+    <div class="campo"><label>Agregar producto</label>
+      <div style="display:flex; gap:8px;">
+        <select id="ff-producto" style="flex:1;">${cache.salud_productos.filter(p=>p.activo).map(p=>`<option value="${p.id}">${p.nombre} — ${formatoMoneda(p.precio_venta)} (stock: ${p.stock})</option>`).join('')}</select>
+        <input type="number" id="ff-cantidad" value="1" min="1" style="width:70px;">
+        <button class="btn btn-fantasma" onclick="agregarItemFactura()">Agregar</button>
+      </div>
+    </div>
+    <div id="ff-lista-items" style="margin-bottom:12px;"></div>
+    <div style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:14px;" id="ff-totales"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="emitirFactura()">Emitir factura</button>
+    </div>
+  `);
+  renderItemsFacturaTemp();
+}
+
+function agregarItemFactura(){
+  const prodId = document.getElementById('ff-producto').value;
+  const cantidad = Number(document.getElementById('ff-cantidad').value)||1;
+  const producto = cache.salud_productos.find(p=>p.id===prodId);
+  if(!producto) return;
+  if(cantidad > producto.stock){ mostrarToast(`Stock insuficiente. Disponible: ${producto.stock}`); return; }
+
+  const existente = itemsFacturaTemp.find(i=>i.producto_id===prodId);
+  if(existente){ existente.cantidad += cantidad; }
+  else {
+    itemsFacturaTemp.push({
+      producto_id: prodId, descripcion: producto.nombre, cantidad,
+      precio_unitario: producto.precio_venta, itbis_aplica: producto.itbis_aplica
+    });
+  }
+  renderItemsFacturaTemp();
+}
+
+function quitarItemFactura(idx){
+  itemsFacturaTemp.splice(idx,1);
+  renderItemsFacturaTemp();
+}
+
+function renderItemsFacturaTemp(){
+  const cont = document.getElementById('ff-lista-items');
+  if(!itemsFacturaTemp.length){
+    cont.innerHTML = `<div style="color:var(--gris); font-size:13px; padding:8px 0;">Aún no has agregado salud_productos.</div>`;
+  } else {
+    cont.innerHTML = itemsFacturaTemp.map((i,idx)=>`
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--linea); font-size:13.5px;">
+        <span>${i.cantidad} × ${i.descripcion}</span>
+        <span style="display:flex; gap:10px; align-items:center;">
+          ${formatoMoneda(i.cantidad*i.precio_unitario)}
+          <button onclick="quitarItemFactura(${idx})" style="background:none; border:none; color:var(--coral); cursor:pointer; font-size:16px;">×</button>
+        </span>
+      </div>
+    `).join('');
+  }
+  const subtotal = itemsFacturaTemp.reduce((s,i)=>s+i.cantidad*i.precio_unitario,0);
+  const itbis = itemsFacturaTemp.reduce((s,i)=> s + (i.itbis_aplica!==false ? i.cantidad*i.precio_unitario*0.18 : 0), 0);
+  document.getElementById('ff-totales').innerHTML = `Subtotal: ${formatoMoneda(subtotal)}<br>ITBIS (18%): ${formatoMoneda(itbis)}<br><strong>Total: ${formatoMoneda(subtotal+itbis)}</strong>`;
+}
+
+async function emitirFactura(){
+  if(!itemsFacturaTemp.length){ mostrarToast('Agrega al menos un producto.'); return; }
+
+  const tipoEcf = document.getElementById('ff-tipo').value;
+
+  // obtener y avanzar secuencia NCF
+  const { data: sec, error: errSec } = await sb.from('salud_secuencias_ncf').select('*').eq('tipo_ecf', tipoEcf).single();
+  if(errSec || !sec){ mostrarToast('No se pudo obtener la secuencia NCF.'); return; }
+  const numeroNcf = `${tipoEcf}${String(sec.secuencia_actual).padStart(8,'0')}`;
+
+  const subtotal = itemsFacturaTemp.reduce((s,i)=>s+i.cantidad*i.precio_unitario,0);
+  const itbis = itemsFacturaTemp.reduce((s,i)=> s + (i.itbis_aplica!==false ? i.cantidad*i.precio_unitario*0.18 : 0), 0);
+
+  const facturaRegistro = {
+    ncf: numeroNcf,
+    tipo_ecf: tipoEcf,
+    paciente_id: document.getElementById('ff-paciente').value || null,
+    cliente_nombre: document.getElementById('ff-cliente-nombre').value.trim() || null,
+    cliente_cedula_rnc: document.getElementById('ff-cliente-doc').value.trim() || null,
+    usuario_id: usuarioActual.id,
+    subtotal, itbis, total: subtotal+itbis,
+    metodo_pago: document.getElementById('ff-metodo').value,
+    tipo: 'venta'
+  };
+
+  const { data: facturaCreada, error: errFactura } = await sb.from('salud_facturas').insert(facturaRegistro).select().single();
+  if(errFactura){ mostrarToast('Error al emitir: '+errFactura.message); return; }
+
+  const items = itemsFacturaTemp.map(i => ({
+    factura_id: facturaCreada.id,
+    producto_id: i.producto_id,
+    descripcion: i.descripcion,
+    cantidad: i.cantidad,
+    precio_unitario: i.precio_unitario,
+    itbis_item: i.itbis_aplica!==false ? i.cantidad*i.precio_unitario*0.18 : 0,
+    subtotal_item: i.cantidad*i.precio_unitario
+  }));
+  await sb.from('salud_factura_items').insert(items);
+
+  // descontar stock
+  for(const i of itemsFacturaTemp){
+    const producto = cache.salud_productos.find(p=>p.id===i.producto_id);
+    if(producto){
+      await sb.from('salud_productos').update({ stock: producto.stock - i.cantidad }).eq('id', producto.id);
+    }
+  }
+
+  // avanzar secuencia NCF
+  await sb.from('salud_secuencias_ncf').update({ secuencia_actual: sec.secuencia_actual + 1 }).eq('id', sec.id);
+
+  cerrarModal();
+  mostrarToast(`Factura ${numeroNcf} emitida.`);
+  cargarTodo();
+}
+
+function verFactura(id){
+  const f = cache.salud_facturas.find(x=>x.id===id);
+  if(!f) return;
+  sb.from('salud_factura_items').select('*').eq('factura_id', id).then(({data})=>{
+    const items = data||[];
+    abrirModal(`
+      <h3>Factura ${f.ncf}</h3>
+      <div style="font-size:13.5px; color:var(--gris); margin-bottom:14px;">
+        ${formatoHora(f.creado_en)} · ${f.salud_pacientes?.nombre||f.cliente_nombre||'Cliente al detalle'}
+      </div>
+      <div class="tabla-wrap"><table>
+        <thead><tr><th>Producto</th><th>Cant.</th><th>P. Unit.</th><th>Subtotal</th></tr></thead>
+        <tbody>${items.map(i=>`<tr><td>${i.descripcion}</td><td>${i.cantidad}</td><td>${formatoMoneda(i.precio_unitario)}</td><td>${formatoMoneda(i.subtotal_item)}</td></tr>`).join('')}</tbody>
+      </table></div>
+      <div style="text-align:right; margin-top:14px; font-family:'IBM Plex Mono',monospace;">
+        Subtotal: ${formatoMoneda(f.subtotal)}<br>ITBIS: ${formatoMoneda(f.itbis)}<br><strong>Total: ${formatoMoneda(f.total)}</strong>
+      </div>
+      <div class="modal-acciones">
+        ${f.estado==='completada'?`<button class="btn btn-peligro" onclick="anularFactura('${f.id}')">Anular factura</button>`:''}
+        <button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button>
+        <button class="btn btn-primario" style="width:auto;" onclick="window.print()">Imprimir</button>
+      </div>
+    `);
+  });
+}
+
+async function anularFactura(id){
+  if(!confirm('¿Anular esta factura? Esta acción no puede deshacerse.')) return;
+  const { error } = await sb.from('salud_facturas').update({ estado:'anulada' }).eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  cerrarModal(); mostrarToast('Factura anulada.'); cargarTodo();
+}
+
+/* ================= REPORTES ================= */
+async function renderReportes(){
+  const completadas = cache.salud_facturas.filter(f=>f.estado==='completada');
+  const totalVentas = completadas.reduce((s,f)=>s+Number(f.total||0),0);
+  const totalFacturas = completadas.length;
+  const promedio = totalFacturas ? totalVentas/totalFacturas : 0;
+
+  document.getElementById('kpi-reportes').innerHTML = `
+    <div class="kpi"><div class="valor">${formatoMoneda(totalVentas)}</div><div class="etiqueta">Ventas totales</div></div>
+    <div class="kpi"><div class="valor">${totalFacturas}</div><div class="etiqueta">Facturas emitidas</div></div>
+    <div class="kpi"><div class="valor">${formatoMoneda(promedio)}</div><div class="etiqueta">Ticket promedio</div></div>
+  `;
+
+  const { data: items } = await sb.from('salud_factura_items').select('descripcion, cantidad, subtotal_item');
+  const agrupado = {};
+  (items||[]).forEach(i=>{
+    if(!agrupado[i.descripcion]) agrupado[i.descripcion] = { unidades:0, ingresos:0 };
+    agrupado[i.descripcion].unidades += i.cantidad;
+    agrupado[i.descripcion].ingresos += Number(i.subtotal_item||0);
+  });
+  const top = Object.entries(agrupado).sort((a,b)=>b[1].unidades-a[1].unidades).slice(0,10);
+  document.querySelector('#tabla-reporte-salud_productos tbody').innerHTML = top.length ? top.map(([nombre,d])=>`
+    <tr><td>${nombre}</td><td>${d.unidades}</td><td>${formatoMoneda(d.ingresos)}</td></tr>
+  `).join('') : `<tr><td colspan="3" class="vacio">Aún no hay ventas registradas.</td></tr>`;
+
+  const en30dias = new Date(); en30dias.setDate(en30dias.getDate()+30);
+  const vencProx = cache.salud_productos.filter(p=>p.fecha_vencimiento && new Date(p.fecha_vencimiento) <= en30dias && new Date(p.fecha_vencimiento) >= new Date());
+  document.querySelector('#tabla-reporte-vencimientos tbody').innerHTML = vencProx.length ? vencProx.map(p=>`
+    <tr><td>${p.nombre}</td><td>${p.lote||'—'}</td><td>${p.fecha_vencimiento}</td><td>${p.stock}</td></tr>
+  `).join('') : `<tr><td colspan="4" class="vacio">Sin vencimientos próximos.</td></tr>`;
+}
+
+/* ================= USUARIOS (admin) ================= */
+function renderUsuarios(){
+  if(usuarioActual.rol !== 'admin') return;
+  const tb = document.querySelector('#tabla-salud_usuarios tbody');
+  tb.innerHTML = cache.salud_usuarios.length ? cache.salud_usuarios.map(u=>`
+    <tr>
+      <td>${u.nombre}</td>
+      <td class="font-mono">${u.usuario}</td>
+      <td><span class="pill pill-verde">${u.rol}</span></td>
+      <td>${u.activo?'<span class="pill pill-verde">Activo</span>':'<span class="pill pill-gris">Inactivo</span>'}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalUsuario('${u.id}')">Editar</button></td>
+    </tr>
+  `).join('') : '';
+}
+
+function abrirModalUsuario(id){
+  const u = id ? cache.salud_usuarios.find(x=>x.id===id) : null;
+  abrirModal(`
+    <h3>${u?'Editar usuario':'Nuevo usuario'}</h3>
+    <div class="campo"><label>Nombre completo</label><input id="uf-nombre" value="${u?.nombre||''}"></div>
+    <div class="grid-2">
+      <div class="campo"><label>Usuario (login)</label><input id="uf-usuario" value="${u?.usuario||''}"></div>
+      <div class="campo"><label>Contraseña</label><input id="uf-password" value="${u?.password||''}" placeholder="${u?'dejar igual si no cambia':''}"></div>
+      <div class="campo"><label>Rol</label>
+        <select id="uf-rol">
+          <option value="admin" ${u?.rol==='admin'?'selected':''}>Admin</option>
+          <option value="doctor" ${u?.rol==='doctor'?'selected':''}>Doctor</option>
+          <option value="farmaceutico" ${u?.rol==='farmaceutico'?'selected':''}>Farmacéutico</option>
+          <option value="cajero" ${u?.rol==='cajero'?'selected':''}>Cajero</option>
+        </select>
+      </div>
+      <div class="campo"><label>Estado</label>
+        <select id="uf-activo"><option value="true" ${u?.activo!==false?'selected':''}>Activo</option><option value="false" ${u?.activo===false?'selected':''}>Inactivo</option></select>
+      </div>
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarUsuario(${u?`'${u.id}'`:'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarUsuario(id){
+  const registro = {
+    nombre: document.getElementById('uf-nombre').value.trim(),
+    usuario: document.getElementById('uf-usuario').value.trim(),
+    password: document.getElementById('uf-password').value,
+    rol: document.getElementById('uf-rol').value,
+    activo: document.getElementById('uf-activo').value === 'true',
+  };
+  if(!registro.nombre || !registro.usuario || !registro.password){ mostrarToast('Completa todos los campos.'); return; }
+
+  const { error } = id ? await sb.from('salud_usuarios').update(registro).eq('id', id)
+                        : await sb.from('salud_usuarios').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  cerrarModal(); mostrarToast('Usuario guardado.'); cargarTodo();
+}
+
+</script>
+</body>
+</html>
