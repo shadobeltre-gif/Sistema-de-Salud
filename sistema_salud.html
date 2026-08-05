@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
   --verde-boticario:#1F4B43;
@@ -241,6 +242,32 @@ tr:last-child td{border-bottom:none;}
 ::-webkit-scrollbar-thumb{background:var(--linea); border-radius:10px;}
 
 .toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--tinta); color:#fff; padding:12px 20px; border-radius:8px; font-size:13.5px; z-index:200; display:none;}
+
+.toolbar-modulo{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--linea); border-radius:var(--radius);}
+.toolbar-modulo .btn{padding:8px 12px; font-size:12.5px;}
+.input-file-oculto{position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;}
+.barra-seleccion{display:none; align-items:center; gap:10px; padding:10px 12px; margin-bottom:12px; background:#FCE9DE; border:1px solid #F0C4A8; border-radius:8px; font-size:13px;}
+.barra-seleccion.activa{display:flex;}
+.chk-fila{width:17px; height:17px; accent-color:var(--verde-boticario); cursor:pointer;}
+
+.panel-filtros{background:#fff; border:1px solid var(--linea); border-radius:var(--radius); padding:16px; margin-bottom:18px;}
+.grid-filtros{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px;}
+.grid-filtros .campo{margin-bottom:0;}
+.filtros-acciones{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
+
+.detalle-fila{display:flex; justify-content:space-between; gap:14px; padding:9px 0; border-bottom:1px solid var(--linea); font-size:13.5px;}
+.detalle-fila:last-child{border-bottom:none;}
+.detalle-fila .etiqueta-d{color:var(--gris); font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase;}
+.detalle-fila .valor-d{text-align:right; max-width:60%;}
+
+@media print{
+  .topbar, .tabs, .toolbar-modulo, .barra-seleccion, .fab, .btn, .btn-salir, .encabezado-vista, .panel-filtros, input[type="checkbox"]{display:none !important;}
+  .contenido{padding:0;}
+  body{background:#fff;}
+  table{font-size:12px;}
+  body.imprimiendo-detalle .contenido{display:none !important;}
+  body.imprimiendo-detalle .modal-fondo{position:static; background:none; padding:0;}
+}
 </style>
 </head>
 <body>
@@ -274,6 +301,7 @@ tr:last-child td{border-bottom:none;}
     <div class="topbar-user">
       <span id="usuario-nombre-display"></span>
       <span class="topbar-rol" id="usuario-rol-display"></span>
+      <button class="btn-salir" onclick="compartirSistema()">Compartir</button>
       <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
     </div>
   </div>
@@ -292,7 +320,7 @@ tr:last-child td{border-bottom:none;}
       </div>
       <div class="tarjetas-kpi" id="kpi-container"></div>
       <div class="panel">
-        <div class="panel-titulo">Próximas salud_citas</div>
+        <div class="panel-titulo">Próximas citas</div>
         <div class="tabla-wrap"><table id="tabla-dashboard-salud_citas"><thead><tr><th>Hora</th><th>Paciente</th><th>Doctor</th><th>Estado</th></tr></thead><tbody></tbody></table></div>
       </div>
       <div class="panel">
@@ -310,8 +338,19 @@ tr:last-child td{border-bottom:none;}
           <button class="btn btn-coral" onclick="abrirModalPaciente()">+ Nuevo paciente</button>
         </div>
       </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="descargarPlantilla('pacientes')">⭳ Plantilla Excel</button>
+        <label class="btn btn-fantasma">⭱ Importar Excel<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="importarExcel(event,'pacientes')"></label>
+        <button class="btn btn-fantasma" onclick="abrirExportar('pacientes')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('pacientes')">🖨 Imprimir</button>
+      </div>
+      <div class="barra-seleccion" id="seleccion-pacientes">
+        <span id="seleccion-pacientes-txt"></span>
+        <button class="btn btn-fantasma" style="padding:6px 10px;" onclick="abrirExportar('pacientes', true)">⭳ Exportar selección</button>
+        <button class="btn btn-peligro" style="padding:6px 10px;" onclick="eliminarSeleccionados('pacientes')">Eliminar selección</button>
+      </div>
       <div class="panel tabla-wrap">
-        <table id="tabla-salud_pacientes"><thead><tr><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Alergias</th><th></th></tr></thead><tbody></tbody></table>
+        <table id="tabla-salud_pacientes"><thead><tr><th><input type="checkbox" class="chk-fila" onchange="toggleTodos('pacientes',this)"></th><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Alergias</th><th></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
 
@@ -321,8 +360,19 @@ tr:last-child td{border-bottom:none;}
         <div><div class="eyebrow">Agenda</div><h2>Citas</h2></div>
         <button class="btn btn-coral" onclick="abrirModalCita()">+ Nueva cita</button>
       </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="descargarPlantilla('citas')">⭳ Plantilla Excel</button>
+        <label class="btn btn-fantasma">⭱ Importar Excel<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="importarExcel(event,'citas')"></label>
+        <button class="btn btn-fantasma" onclick="abrirExportar('citas')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('citas')">🖨 Imprimir</button>
+      </div>
+      <div class="barra-seleccion" id="seleccion-citas">
+        <span id="seleccion-citas-txt"></span>
+        <button class="btn btn-fantasma" style="padding:6px 10px;" onclick="abrirExportar('citas', true)">⭳ Exportar selección</button>
+        <button class="btn btn-peligro" style="padding:6px 10px;" onclick="eliminarSeleccionados('citas')">Eliminar selección</button>
+      </div>
       <div class="panel tabla-wrap">
-        <table id="tabla-salud_citas"><thead><tr><th>Fecha</th><th>Paciente</th><th>Doctor</th><th>Motivo</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+        <table id="tabla-salud_citas"><thead><tr><th><input type="checkbox" class="chk-fila" onchange="toggleTodos('citas',this)"></th><th>Fecha</th><th>Paciente</th><th>Doctor</th><th>Motivo</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
 
@@ -335,8 +385,19 @@ tr:last-child td{border-bottom:none;}
           <button class="btn btn-coral" onclick="abrirModalHistorial()">+ Nuevo registro</button>
         </div>
       </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="descargarPlantilla('historiales')">⭳ Plantilla Excel</button>
+        <label class="btn btn-fantasma">⭱ Importar Excel<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="importarExcel(event,'historiales')"></label>
+        <button class="btn btn-fantasma" onclick="abrirExportar('historiales')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('historiales')">🖨 Imprimir</button>
+      </div>
+      <div class="barra-seleccion" id="seleccion-historiales">
+        <span id="seleccion-historiales-txt"></span>
+        <button class="btn btn-fantasma" style="padding:6px 10px;" onclick="abrirExportar('historiales', true)">⭳ Exportar selección</button>
+        <button class="btn btn-peligro" style="padding:6px 10px;" onclick="eliminarSeleccionados('historiales')">Eliminar selección</button>
+      </div>
       <div class="panel tabla-wrap">
-        <table id="tabla-salud_historiales"><thead><tr><th>Fecha</th><th>Paciente</th><th>Diagnóstico</th><th>Doctor</th><th></th></tr></thead><tbody></tbody></table>
+        <table id="tabla-salud_historiales"><thead><tr><th><input type="checkbox" class="chk-fila" onchange="toggleTodos('historiales',this)"></th><th>Fecha</th><th>Paciente</th><th>Diagnóstico</th><th>Doctor</th><th></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
 
@@ -349,8 +410,19 @@ tr:last-child td{border-bottom:none;}
           <button class="btn btn-coral" onclick="abrirModalProducto()">+ Nuevo producto</button>
         </div>
       </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="descargarPlantilla('productos')">⭳ Plantilla Excel</button>
+        <label class="btn btn-fantasma">⭱ Importar Excel<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="importarExcel(event,'productos')"></label>
+        <button class="btn btn-fantasma" onclick="abrirExportar('productos')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('productos')">🖨 Imprimir</button>
+      </div>
+      <div class="barra-seleccion" id="seleccion-productos">
+        <span id="seleccion-productos-txt"></span>
+        <button class="btn btn-fantasma" style="padding:6px 10px;" onclick="abrirExportar('productos', true)">⭳ Exportar selección</button>
+        <button class="btn btn-peligro" style="padding:6px 10px;" onclick="eliminarSeleccionados('productos')">Eliminar selección</button>
+      </div>
       <div class="panel tabla-wrap">
-        <table id="tabla-inventario"><thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Vence</th><th></th></tr></thead><tbody></tbody></table>
+        <table id="tabla-inventario"><thead><tr><th><input type="checkbox" class="chk-fila" onchange="toggleTodos('productos',this)"></th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Vence</th><th></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
 
@@ -360,8 +432,16 @@ tr:last-child td{border-bottom:none;}
         <div><div class="eyebrow">Punto de venta</div><h2>Facturación</h2></div>
         <button class="btn btn-coral" onclick="abrirModalFactura()">+ Nueva factura</button>
       </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="abrirExportar('facturas')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('facturas')">🖨 Imprimir listado</button>
+      </div>
+      <div class="barra-seleccion" id="seleccion-facturas">
+        <span id="seleccion-facturas-txt"></span>
+        <button class="btn btn-fantasma" style="padding:6px 10px;" onclick="abrirExportar('facturas', true)">⭳ Exportar selección</button>
+      </div>
       <div class="panel tabla-wrap">
-        <table id="tabla-salud_facturas"><thead><tr><th>NCF</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+        <table id="tabla-salud_facturas"><thead><tr><th><input type="checkbox" class="chk-fila" onchange="toggleTodos('facturas',this)"></th><th>NCF</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
 
@@ -370,7 +450,38 @@ tr:last-child td{border-bottom:none;}
       <div class="encabezado-vista">
         <div><div class="eyebrow">Analítica</div><h2>Reportes</h2></div>
       </div>
+
+      <div class="panel-filtros">
+        <div class="panel-titulo">Filtros del reporte</div>
+        <div class="grid-filtros">
+          <div class="campo"><label>Desde</label><input type="date" id="rf-desde"></div>
+          <div class="campo"><label>Hasta</label><input type="date" id="rf-hasta"></div>
+          <div class="campo"><label>Paciente</label><select id="rf-paciente"><option value="">Todos</option></select></div>
+          <div class="campo"><label>Doctor</label><select id="rf-doctor"><option value="">Todos</option></select></div>
+          <div class="campo"><label>Categoría producto</label><select id="rf-categoria"><option value="">Todas</option></select></div>
+          <div class="campo"><label>Estado factura</label>
+            <select id="rf-estado-factura"><option value="">Todos</option><option value="completada">Completada</option><option value="anulada">Anulada</option></select>
+          </div>
+          <div class="campo"><label>Método de pago</label>
+            <select id="rf-metodo"><option value="">Todos</option><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option><option value="transferencia">Transferencia</option><option value="seguro">Seguro</option></select>
+          </div>
+          <div class="campo"><label>Tipo e-CF</label>
+            <select id="rf-tipoecf"><option value="">Todos</option><option value="B01">B01</option><option value="B02">B02</option><option value="B14">B14</option><option value="B15">B15</option></select>
+          </div>
+        </div>
+        <div class="filtros-acciones">
+          <button class="btn btn-primario" style="width:auto;" onclick="aplicarFiltrosReporte()">Aplicar filtros</button>
+          <button class="btn btn-fantasma" onclick="limpiarFiltrosReporte()">Limpiar</button>
+          <button class="btn btn-fantasma" onclick="abrirExportarReporte()">⭳ Exportar reporte</button>
+          <button class="btn btn-fantasma" onclick="imprimirReporteCompleto()">🖨 Imprimir reporte</button>
+        </div>
+      </div>
+
       <div class="tarjetas-kpi" id="kpi-reportes"></div>
+      <div class="panel">
+        <div class="panel-titulo">Facturas filtradas</div>
+        <div class="tabla-wrap"><table id="tabla-reporte-facturas"><thead><tr><th>NCF</th><th>Fecha</th><th>Cliente</th><th>Método</th><th>Total</th><th>Estado</th></tr></thead><tbody></tbody></table></div>
+      </div>
       <div class="panel">
         <div class="panel-titulo">Productos más vendidos</div>
         <div class="tabla-wrap"><table id="tabla-reporte-salud_productos"><thead><tr><th>Producto</th><th>Unidades vendidas</th><th>Ingresos</th></tr></thead><tbody></tbody></table></div>
@@ -378,6 +489,19 @@ tr:last-child td{border-bottom:none;}
       <div class="panel">
         <div class="panel-titulo">Vencimientos próximos (30 días)</div>
         <div class="tabla-wrap"><table id="tabla-reporte-vencimientos"><thead><tr><th>Producto</th><th>Lote</th><th>Vence</th><th>Stock</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="panel">
+        <div class="panel-titulo">Citas en el período</div>
+        <div class="tabla-wrap"><table id="tabla-reporte-citas"><thead><tr><th>Fecha</th><th>Paciente</th><th>Doctor</th><th>Estado</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="panel" id="panel-respaldo" style="display:none;">
+        <div class="panel-titulo">Respaldo del sistema</div>
+        <p style="font-size:13px; color:var(--gris); margin-bottom:12px;">Descarga una copia completa de todos los datos (pacientes, citas, historiales, inventario, facturas y usuarios) en un solo archivo Excel, o restaura el sistema desde un respaldo anterior.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-coral" onclick="respaldoCompleto()">⭳ Descargar respaldo completo</button>
+          <label class="btn btn-fantasma">⭱ Restaurar desde respaldo<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="restaurarRespaldo(event)"></label>
+        </div>
       </div>
     </div>
 
@@ -387,8 +511,148 @@ tr:last-child td{border-bottom:none;}
         <div><div class="eyebrow">Administración</div><h2>Usuarios</h2></div>
         <button class="btn btn-coral" onclick="abrirModalUsuario()">+ Nuevo usuario</button>
       </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="descargarPlantilla('usuarios')">⭳ Plantilla Excel</button>
+        <label class="btn btn-fantasma">⭱ Importar Excel<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="importarExcel(event,'usuarios')"></label>
+        <button class="btn btn-fantasma" onclick="abrirExportar('usuarios')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('usuarios')">🖨 Imprimir</button>
+      </div>
+      <div class="barra-seleccion" id="seleccion-usuarios">
+        <span id="seleccion-usuarios-txt"></span>
+        <button class="btn btn-peligro" style="padding:6px 10px;" onclick="eliminarSeleccionados('usuarios')">Eliminar selección</button>
+      </div>
       <div class="panel tabla-wrap">
-        <table id="tabla-salud_usuarios"><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+        <table id="tabla-salud_usuarios"><thead><tr><th><input type="checkbox" class="chk-fila" onchange="toggleTodos('usuarios',this)"></th><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- AUDITORÍA (solo admin) -->
+    <div class="vista" id="vista-auditoria">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Trazabilidad</div><h2>Auditoría</h2></div>
+      </div>
+      <div class="panel-filtros">
+        <div class="grid-filtros">
+          <div class="campo"><label>Desde</label><input type="date" id="af-desde" onchange="renderAuditoria()"></div>
+          <div class="campo"><label>Hasta</label><input type="date" id="af-hasta" onchange="renderAuditoria()"></div>
+          <div class="campo"><label>Usuario</label><select id="af-usuario" onchange="renderAuditoria()"><option value="">Todos</option></select></div>
+          <div class="campo"><label>Acción</label>
+            <select id="af-accion" onchange="renderAuditoria()">
+              <option value="">Todas</option>
+              <option value="login">Inicio de sesión</option>
+              <option value="logout">Cierre de sesión</option>
+              <option value="crear">Crear</option>
+              <option value="editar">Editar</option>
+              <option value="eliminar">Eliminar</option>
+              <option value="emitir_factura">Emitir factura</option>
+              <option value="anular_factura">Anular factura</option>
+              <option value="importar">Importar Excel</option>
+              <option value="restaurar_respaldo">Restaurar respaldo</option>
+            </select>
+          </div>
+          <div class="campo"><label>Módulo</label>
+            <select id="af-modulo" onchange="renderAuditoria()">
+              <option value="">Todos</option>
+              <option value="pacientes">Pacientes</option><option value="citas">Citas</option>
+              <option value="historiales">Historiales</option><option value="productos">Inventario</option>
+              <option value="facturas">Facturación</option><option value="usuarios">Usuarios</option>
+              <option value="sistema">Sistema</option>
+            </select>
+          </div>
+        </div>
+        <div class="filtros-acciones">
+          <button class="btn btn-fantasma" onclick="limpiarFiltrosAuditoria()">Limpiar filtros</button>
+          <button class="btn btn-fantasma" onclick="abrirExportar('auditoria')">⭳ Exportar</button>
+          <button class="btn btn-fantasma" onclick="imprimirModulo('auditoria')">🖨 Imprimir</button>
+        </div>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_auditoria"><thead><tr><th>Fecha</th><th>Usuario</th><th>Rol</th><th>Acción</th><th>Módulo</th><th>Detalle</th></tr></thead><tbody></tbody></table>
+      </div>
+      <p style="font-size:12px; color:var(--gris); margin-top:10px;">Se muestran las últimas 500 acciones registradas. El registro de auditoría no se puede editar ni eliminar desde la app.</p>
+    </div>
+
+    <!-- MANUAL -->
+    <div class="vista" id="vista-manual">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Ayuda</div><h2>Manual de usuario</h2></div>
+        <button class="btn btn-coral" onclick="descargarManual()">⭳ Descargar manual (PDF)</button>
+      </div>
+
+      <div class="panel" id="contenido-manual">
+        <h3 class="font-display" style="font-size:22px; margin-bottom:4px;">SHADO Salud</h3>
+        <p style="color:var(--gris); font-size:13px; margin-bottom:20px;">Sistema integral de gestión para farmacia y consultorio — Manual completo</p>
+
+        <h4 style="margin:20px 0 8px;">1. Introducción</h4>
+        <p style="font-size:13.5px; line-height:1.7;">SHADO Salud es un sistema de gestión pensado para farmacias y consultorios que necesitan controlar pacientes, citas, historiales clínicos, inventario y facturación en un solo lugar. Funciona directamente desde el navegador, sin instalación, y guarda toda la información en una base de datos en la nube (Supabase). Puede usarse desde cualquier celular, tablet o computadora con conexión a internet, y varias personas pueden trabajar en él al mismo tiempo, cada una con su propio usuario y nivel de acceso.</p>
+
+        <h4 style="margin:20px 0 8px;">2. Acceso al sistema</h4>
+        <p style="font-size:13.5px; line-height:1.7;">Para entrar se necesita un usuario y contraseña creados previamente por un administrador. Usuario de fábrica: <strong>admin / admin123</strong> (cámbialo apenas tengas acceso). El sistema recuerda la sesión en ese navegador hasta que se toque "Salir".</p>
+
+        <h4 style="margin:20px 0 8px;">3. Roles y permisos</h4>
+        <p style="font-size:13.5px; line-height:1.7;">La tabla siguiente muestra el acceso <strong>sugerido</strong> según el rol. Pero desde <strong>Usuarios → Nuevo/Editar → Acceso a módulos</strong>, un admin puede marcar o desmarcar con checkbox exactamente a qué módulos entra cada persona, sin importar su rol — el rol solo se usa para autocompletar sugerencias con el botón "Sugerir según rol".</p>
+        <div class="tabla-wrap"><table>
+          <thead><tr><th>Módulo</th><th>Admin</th><th>Doctor</th><th>Farmacéutico</th><th>Cajero</th></tr></thead>
+          <tbody>
+            <tr><td>Panel (Dashboard)</td><td>Sí</td><td>Sí</td><td>Sí</td><td>Sí</td></tr>
+            <tr><td>Pacientes</td><td>Sí</td><td>Sí</td><td>No</td><td>No</td></tr>
+            <tr><td>Citas</td><td>Sí</td><td>Sí</td><td>No</td><td>No</td></tr>
+            <tr><td>Historiales clínicos</td><td>Sí</td><td>Sí</td><td>No</td><td>No</td></tr>
+            <tr><td>Inventario</td><td>Sí</td><td>No</td><td>Sí</td><td>No</td></tr>
+            <tr><td>Facturación</td><td>Sí</td><td>No</td><td>Sí</td><td>Sí</td></tr>
+            <tr><td>Reportes</td><td>Sí</td><td>No</td><td>Sí</td><td>No</td></tr>
+            <tr><td>Usuarios</td><td>Sí</td><td>No</td><td>No</td><td>No</td></tr>
+            <tr><td>Respaldo del sistema</td><td>Sí</td><td>No</td><td>No</td><td>No</td></tr>
+          </tbody>
+        </table></div>
+
+        <h4 style="margin:20px 0 8px;">4. Panel principal (Dashboard)</h4>
+        <p style="font-size:13.5px; line-height:1.7;">Primera pantalla al iniciar sesión. Muestra citas de hoy, ventas del día, productos con stock bajo y total de pacientes registrados, además de las próximas citas y alertas de inventario.</p>
+
+        <h4 style="margin:20px 0 8px;">5. Pacientes</h4>
+        <p style="font-size:13.5px; line-height:1.7;"><strong>Campos:</strong> nombre, cédula, teléfono, dirección, fecha de nacimiento, sexo, alergias, condiciones crónicas y contacto de emergencia.</p>
+
+        <h4 style="margin:20px 0 8px;">6. Citas</h4>
+        <p style="font-size:13.5px; line-height:1.7;"><strong>Campos:</strong> paciente, doctor, fecha y hora, motivo, estado (pendiente/atendida/cancelada/no asistió) y notas. Al importar por Excel, la plantilla pide la cédula del paciente y el usuario del doctor para relacionarlos automáticamente.</p>
+
+        <h4 style="margin:20px 0 8px;">7. Historiales clínicos</h4>
+        <p style="font-size:13.5px; line-height:1.7;">Registra diagnóstico, tratamiento, receta, observaciones y signos vitales (presión, peso, temperatura) de cada consulta. Solo doctores y admin pueden verlos y crearlos.</p>
+
+        <h4 style="margin:20px 0 8px;">8. Inventario</h4>
+        <p style="font-size:13.5px; line-height:1.7;"><strong>Campos:</strong> nombre, categoría, laboratorio, presentación, precio de compra, precio de venta, ITBIS, stock, stock mínimo, lote y vencimiento. El sistema marca en rojo el stock bajo el mínimo y en ámbar los vencimientos a menos de 30 días.</p>
+
+        <h4 style="margin:20px 0 8px;">9. Facturación</h4>
+        <p style="font-size:13.5px; line-height:1.7;">
+          1) Elige el tipo de e-CF (B01 Crédito Fiscal, B02 Consumo, B14 Régimen Especial, B15 Gubernamental).<br>
+          2) Elige el método de pago.<br>
+          3) Selecciona el paciente o escribe un cliente al detalle.<br>
+          4) Agrega productos — no deja vender más del stock disponible.<br>
+          5) Al emitir, calcula el ITBIS (18%), asigna el siguiente NCF de la secuencia, descuenta el stock y guarda la factura.<br><br>
+          <strong>Importante:</strong> las facturas no se importan por Excel, para proteger la numeración fiscal consecutiva — solo se emiten desde el formulario.
+        </p>
+
+        <h4 style="margin:20px 0 8px;">10. Reportes</h4>
+        <p style="font-size:13.5px; line-height:1.7;">Filtra por fecha, paciente, doctor, categoría, estado de factura, método de pago y tipo de e-CF. Actualiza KPIs y tablas de facturas, productos más vendidos, vencimientos y citas del período. Se puede exportar a Excel o imprimir.</p>
+
+        <h4 style="margin:20px 0 8px;">11. Respaldo del sistema</h4>
+        <p style="font-size:13.5px; line-height:1.7;">Solo el administrador lo ve, dentro de Reportes. <strong>Descargar respaldo completo</strong> genera un Excel con todas las tablas en hojas separadas. <strong>Restaurar desde respaldo</strong> recupera Pacientes, Inventario y Usuarios desde ese archivo (Citas, Historiales y Facturas no se restauran automáticamente por sus relaciones cruzadas).</p>
+
+        <h4 style="margin:20px 0 8px;">12. Compartir el sistema con colaboradores</h4>
+        <p style="font-size:13.5px; line-height:1.7;">
+          El enlace del sistema puede compartirse con cualquiera, pero solo entra quien tenga usuario y contraseña válidos.<br>
+          1) El admin crea la cuenta en Usuarios con el rol correspondiente.<br>
+          2) Comparte el enlace (botón "Compartir" arriba, o copiando la dirección del navegador).<br>
+          3) El colaborador entra desde su propio dispositivo. Todos ven la misma información en tiempo real.
+        </p>
+        <button class="btn btn-primario" style="width:auto; margin-top:6px;" onclick="compartirSistema()">🔗 Compartir enlace del sistema</button>
+
+        <h4 style="margin:20px 0 8px;">13. Preguntas frecuentes</h4>
+        <p style="font-size:13.5px; line-height:1.7;">
+          <strong>¿Varios dispositivos a la vez?</strong> Sí, cualquier cantidad de personas puede usarlo simultáneamente desde el mismo enlace.<br>
+          <strong>¿Olvidé mi contraseña?</strong> Un admin puede editar tu cuenta en Usuarios y asignarte una nueva.<br>
+          <strong>¿Se pierden los datos al cerrar el navegador?</strong> No, todo se guarda en la nube al instante.<br>
+          <strong>¿Puedo cambiar el número de NCF manualmente?</strong> No desde la app; eso se controla desde la tabla de secuencias en Supabase.
+        </p>
       </div>
     </div>
 
@@ -413,18 +677,96 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
    ============================================================ */
 
 let usuarioActual = null;
-let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[] };
+let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[] };
 
 const TABS_POR_ROL = {
-  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','inventario','facturacion','reportes','salud_usuarios'],
-  doctor:       ['dashboard','salud_pacientes','salud_citas','salud_historiales'],
-  farmaceutico: ['dashboard','inventario','facturacion','reportes'],
-  cajero:       ['dashboard','facturacion']
+  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','inventario','facturacion','reportes','salud_usuarios','auditoria','manual'],
+  doctor:       ['dashboard','salud_pacientes','salud_citas','salud_historiales','manual'],
+  farmaceutico: ['dashboard','inventario','facturacion','reportes','manual'],
+  cajero:       ['dashboard','facturacion','manual'],
+  enfermeria:   ['dashboard','salud_pacientes','salud_citas','salud_historiales','manual'],
+  laboratorio:  ['dashboard','salud_pacientes','salud_historiales','manual'],
+  admision:     ['dashboard','salud_pacientes','salud_citas','manual'],
+  seguros:      ['dashboard','facturacion','reportes','manual']
 };
 const NOMBRE_TAB = {
   dashboard:'Panel', salud_pacientes:'Pacientes', salud_citas:'Citas', salud_historiales:'Historiales',
-  inventario:'Inventario', facturacion:'Facturación', reportes:'Reportes', salud_usuarios:'Usuarios'
+  inventario:'Inventario', facturacion:'Facturación', reportes:'Reportes', salud_usuarios:'Usuarios',
+  auditoria:'Auditoría', manual:'Manual'
 };
+const MODULOS_PERMISO = [
+  {clave:'salud_pacientes', etiqueta:'Pacientes'},
+  {clave:'salud_citas', etiqueta:'Citas'},
+  {clave:'salud_historiales', etiqueta:'Historiales clínicos'},
+  {clave:'inventario', etiqueta:'Inventario'},
+  {clave:'facturacion', etiqueta:'Facturación'},
+  {clave:'reportes', etiqueta:'Reportes'},
+  {clave:'salud_usuarios', etiqueta:'Usuarios (administración)'},
+  {clave:'auditoria', etiqueta:'Auditoría'},
+];
+
+/* ============================================================
+   CONFIGURACIÓN DE MÓDULOS — Excel, impresión, selección, detalles
+   ============================================================ */
+const CONFIG_MODULOS = {
+  pacientes: {
+    tablaSb:'salud_pacientes', cacheKey:'salud_pacientes', titulo:'Pacientes', renderFn:()=>renderPacientes(),
+    columnas:[
+      {clave:'nombre', etiqueta:'Nombre'}, {clave:'cedula', etiqueta:'Cédula'}, {clave:'telefono', etiqueta:'Teléfono'},
+      {clave:'direccion', etiqueta:'Dirección'}, {clave:'fecha_nacimiento', etiqueta:'Fecha nacimiento (AAAA-MM-DD)'},
+      {clave:'sexo', etiqueta:'Sexo (M/F)'}, {clave:'alergias', etiqueta:'Alergias'},
+      {clave:'condiciones_cronicas', etiqueta:'Condiciones crónicas'}, {clave:'contacto_emergencia', etiqueta:'Contacto de emergencia'},
+    ]
+  },
+  citas: {
+    tablaSb:'salud_citas', cacheKey:'salud_citas', titulo:'Citas', renderFn:()=>renderCitas(),
+    columnas:[
+      {clave:'paciente_cedula', etiqueta:'Cédula del paciente'}, {clave:'doctor_usuario', etiqueta:'Usuario del doctor'},
+      {clave:'fecha', etiqueta:'Fecha y hora (AAAA-MM-DD HH:MM)'}, {clave:'motivo', etiqueta:'Motivo'},
+      {clave:'estado', etiqueta:'Estado (pendiente/atendida/cancelada/no_asistio)'}, {clave:'notas', etiqueta:'Notas'},
+    ]
+  },
+  historiales: {
+    tablaSb:'salud_historiales', cacheKey:'salud_historiales', titulo:'Historiales', renderFn:()=>renderHistoriales(),
+    columnas:[
+      {clave:'paciente_cedula', etiqueta:'Cédula del paciente'}, {clave:'diagnostico', etiqueta:'Diagnóstico'},
+      {clave:'tratamiento', etiqueta:'Tratamiento'}, {clave:'receta', etiqueta:'Receta'}, {clave:'observaciones', etiqueta:'Observaciones'},
+    ]
+  },
+  productos: {
+    tablaSb:'salud_productos', cacheKey:'salud_productos', titulo:'Inventario', renderFn:()=>renderInventario(),
+    columnas:[
+      {clave:'nombre', etiqueta:'Nombre'}, {clave:'categoria', etiqueta:'Categoría'}, {clave:'laboratorio', etiqueta:'Laboratorio'},
+      {clave:'presentacion', etiqueta:'Presentación'}, {clave:'precio_compra', etiqueta:'Precio compra'}, {clave:'precio_venta', etiqueta:'Precio venta'},
+      {clave:'itbis_aplica', etiqueta:'ITBIS aplica (true/false)'}, {clave:'stock', etiqueta:'Stock'}, {clave:'stock_minimo', etiqueta:'Stock mínimo'},
+      {clave:'lote', etiqueta:'Lote'}, {clave:'fecha_vencimiento', etiqueta:'Vencimiento (AAAA-MM-DD)'},
+    ]
+  },
+  facturas: {
+    tablaSb:'salud_facturas', cacheKey:'salud_facturas', titulo:'Facturas', renderFn:()=>renderFacturas(), soloExportar:true,
+    columnas:[
+      {clave:'ncf', etiqueta:'NCF'}, {clave:'tipo_ecf', etiqueta:'Tipo e-CF'}, {clave:'cliente', etiqueta:'Cliente'},
+      {clave:'subtotal', etiqueta:'Subtotal'}, {clave:'itbis', etiqueta:'ITBIS'}, {clave:'total', etiqueta:'Total'},
+      {clave:'metodo_pago', etiqueta:'Método de pago'}, {clave:'estado', etiqueta:'Estado'}, {clave:'creado_en', etiqueta:'Fecha'},
+    ]
+  },
+  usuarios: {
+    tablaSb:'salud_usuarios', cacheKey:'salud_usuarios', titulo:'Usuarios', renderFn:()=>renderUsuarios(),
+    columnas:[
+      {clave:'nombre', etiqueta:'Nombre'}, {clave:'usuario', etiqueta:'Usuario'}, {clave:'password', etiqueta:'Contraseña'},
+      {clave:'rol', etiqueta:'Rol (admin/doctor/farmaceutico/cajero/enfermeria/laboratorio/admision/seguros)'}, {clave:'activo', etiqueta:'Activo (true/false)'},
+      {clave:'permisos_modulos', etiqueta:'Módulos permitidos, separados por coma (salud_pacientes,salud_citas,salud_historiales,inventario,facturacion,reportes,salud_usuarios,auditoria)'},
+    ]
+  },
+  auditoria: {
+    tablaSb:'salud_auditoria', cacheKey:'salud_auditoria', titulo:'Auditoría', renderFn:()=>renderAuditoria(), soloExportar:true,
+    columnas:[
+      {clave:'creado_en', etiqueta:'Fecha'}, {clave:'usuario_nombre', etiqueta:'Usuario'}, {clave:'usuario_rol', etiqueta:'Rol'},
+      {clave:'accion', etiqueta:'Acción'}, {clave:'modulo', etiqueta:'Módulo'}, {clave:'detalle', etiqueta:'Detalle'},
+    ]
+  }
+};
+let seleccionados = { pacientes:new Set(), citas:new Set(), historiales:new Set(), productos:new Set(), facturas:new Set(), usuarios:new Set() };
 
 function mostrarToast(msg){
   const t = document.getElementById('toast');
@@ -457,10 +799,12 @@ async function iniciarSesion(){
 
   usuarioActual = data;
   sessionStorage.setItem('shado_salud_user', JSON.stringify(data));
+  registrarAuditoria('login', 'sistema', usuarioActual.id, `Inicio de sesión: ${usuarioActual.nombre}`);
   entrarAlApp();
 }
 
 function cerrarSesion(){
+  if(usuarioActual) registrarAuditoria('logout', 'sistema', usuarioActual.id, `Cierre de sesión: ${usuarioActual.nombre}`);
   usuarioActual = null;
   sessionStorage.removeItem('shado_salud_user');
   document.getElementById('app').style.display = 'none';
@@ -474,12 +818,23 @@ function entrarAlApp(){
   document.getElementById('app').style.display = 'block';
   document.getElementById('usuario-nombre-display').textContent = usuarioActual.nombre;
   document.getElementById('usuario-rol-display').textContent = usuarioActual.rol;
+  const panelRespaldo = document.getElementById('panel-respaldo');
+  if(panelRespaldo) panelRespaldo.style.display = tabsDelUsuario().includes('salud_usuarios') ? 'block' : 'none';
   construirTabs();
   cargarTodo();
 }
 
+function tabsDelUsuario(){
+  const personalizados = usuarioActual.permisos_modulos;
+  if(personalizados && personalizados.length){
+    const permitidos = personalizados.filter(t=>t!=='dashboard' && t!=='manual');
+    return ['dashboard', ...permitidos, 'manual'];
+  }
+  return TABS_POR_ROL[usuarioActual.rol] || ['dashboard','manual'];
+}
+
 function construirTabs(){
-  const tabs = TABS_POR_ROL[usuarioActual.rol] || ['dashboard'];
+  const tabs = tabsDelUsuario();
   const nav = document.getElementById('tabs-nav');
   nav.innerHTML = tabs.map((t,i)=>
     `<button class="tab-btn ${i===0?'activa':''}" data-tab="${t}" onclick="cambiarTab('${t}')">${NOMBRE_TAB[t]}</button>`
@@ -520,6 +875,11 @@ async function cargarTodo(){
   cache.salud_facturas = f.data || [];
   cache.salud_usuarios = u.data || [];
 
+  if(usuarioActual && tabsDelUsuario().includes('auditoria')){
+    const { data } = await sb.from('salud_auditoria').select('*').order('creado_en', {ascending:false}).limit(500);
+    cache.salud_auditoria = data || [];
+  }
+
   renderDashboard();
   renderPacientes();
   renderCitas();
@@ -528,6 +888,7 @@ async function cargarTodo(){
   renderFacturas();
   renderReportes();
   renderUsuarios();
+  renderAuditoria();
 }
 
 /* ---------------- DASHBOARD ---------------- */
@@ -548,7 +909,7 @@ function renderDashboard(){
   const tbCitas = document.querySelector('#tabla-dashboard-salud_citas tbody');
   tbCitas.innerHTML = citasHoy.length ? citasHoy.map(c=>`
     <tr><td>${formatoHora(c.fecha)}</td><td>${c.salud_pacientes?.nombre||'—'}</td><td>${c.salud_usuarios?.nombre||'—'}</td><td>${pillEstado(c.estado)}</td></tr>
-  `).join('') : `<tr><td colspan="4" class="vacio">No hay salud_citas programadas para hoy.</td></tr>`;
+  `).join('') : `<tr><td colspan="4" class="vacio">No hay citas programadas para hoy.</td></tr>`;
 
   const tbAlertas = document.querySelector('#tabla-dashboard-alertas tbody');
   tbAlertas.innerHTML = stockBajo.length ? stockBajo.map(p=>`
@@ -580,13 +941,17 @@ function renderPacientes(){
   const tb = document.querySelector('#tabla-salud_pacientes tbody');
   tb.innerHTML = lista.length ? lista.map(p=>`
     <tr>
+      <td><input type="checkbox" class="chk-fila" onchange="toggleUno('pacientes','${p.id}',this)" ${seleccionados.pacientes.has(p.id)?'checked':''}></td>
       <td><strong>${p.nombre}</strong></td>
       <td>${p.cedula||'—'}</td>
       <td>${p.telefono||'—'}</td>
       <td>${p.alergias||'—'}</td>
-      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalPaciente('${p.id}')">Editar</button></td>
+      <td style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verDetalles('pacientes','${p.id}')">Detalles</button>
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalPaciente('${p.id}')">Editar</button>
+      </td>
     </tr>
-  `).join('') : `<tr><td colspan="5" class="vacio">Sin salud_pacientes registrados aún.</td></tr>`;
+  `).join('') : `<tr><td colspan="6" class="vacio">Sin pacientes registrados aún.</td></tr>`;
 }
 
 function abrirModalPaciente(id){
@@ -631,13 +996,16 @@ async function guardarPaciente(id){
   const { error } = id ? await sb.from('salud_pacientes').update(registro).eq('id', id)
                         : await sb.from('salud_pacientes').insert(registro);
   if(error){ mostrarToast('Error al guardar: '+error.message); return; }
+  registrarAuditoria(id?'editar':'crear', 'pacientes', id, registro.nombre);
   cerrarModal(); mostrarToast('Paciente guardado.'); cargarTodo();
 }
 
 async function eliminarPaciente(id){
   if(!confirm('¿Eliminar este paciente y su historial asociado?')) return;
+  const p = cache.salud_pacientes.find(x=>x.id===id);
   const { error } = await sb.from('salud_pacientes').delete().eq('id', id);
   if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('eliminar', 'pacientes', id, p?.nombre||'');
   cerrarModal(); mostrarToast('Paciente eliminado.'); cargarTodo();
 }
 
@@ -646,14 +1014,18 @@ function renderCitas(){
   const tb = document.querySelector('#tabla-salud_citas tbody');
   tb.innerHTML = cache.salud_citas.length ? cache.salud_citas.map(c=>`
     <tr>
+      <td><input type="checkbox" class="chk-fila" onchange="toggleUno('citas','${c.id}',this)" ${seleccionados.citas.has(c.id)?'checked':''}></td>
       <td>${formatoHora(c.fecha)}</td>
       <td>${c.salud_pacientes?.nombre||'—'}</td>
       <td>${c.salud_usuarios?.nombre||'—'}</td>
       <td>${c.motivo||'—'}</td>
       <td>${pillEstado(c.estado)}</td>
-      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalCita('${c.id}')">Editar</button></td>
+      <td style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verDetalles('citas','${c.id}')">Detalles</button>
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalCita('${c.id}')">Editar</button>
+      </td>
     </tr>
-  `).join('') : `<tr><td colspan="6" class="vacio">No hay salud_citas registradas.</td></tr>`;
+  `).join('') : `<tr><td colspan="7" class="vacio">No hay citas registradas.</td></tr>`;
 }
 
 function abrirModalCita(id){
@@ -699,6 +1071,7 @@ async function guardarCita(id){
   const { error } = id ? await sb.from('salud_citas').update(registro).eq('id', id)
                         : await sb.from('salud_citas').insert(registro);
   if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria(id?'editar':'crear', 'citas', id, registro.motivo||'');
   cerrarModal(); mostrarToast('Cita guardada.'); cargarTodo();
 }
 
@@ -706,6 +1079,7 @@ async function eliminarCita(id){
   if(!confirm('¿Eliminar esta cita?')) return;
   const { error } = await sb.from('salud_citas').delete().eq('id', id);
   if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('eliminar', 'citas', id, '');
   cerrarModal(); mostrarToast('Cita eliminada.'); cargarTodo();
 }
 
@@ -716,13 +1090,17 @@ function renderHistoriales(){
   const tb = document.querySelector('#tabla-salud_historiales tbody');
   tb.innerHTML = lista.length ? lista.map(h=>`
     <tr>
+      <td><input type="checkbox" class="chk-fila" onchange="toggleUno('historiales','${h.id}',this)" ${seleccionados.historiales.has(h.id)?'checked':''}></td>
       <td>${formatoHora(h.fecha)}</td>
       <td>${h.salud_pacientes?.nombre||'—'}</td>
       <td>${h.diagnostico||'—'}</td>
       <td>${h.salud_usuarios?.nombre||'—'}</td>
-      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalHistorial('${h.id}')">Ver / Editar</button></td>
+      <td style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verDetalles('historiales','${h.id}')">Detalles</button>
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalHistorial('${h.id}')">Editar</button>
+      </td>
     </tr>
-  `).join('') : `<tr><td colspan="5" class="vacio">Sin registros clínicos aún.</td></tr>`;
+  `).join('') : `<tr><td colspan="6" class="vacio">Sin registros clínicos aún.</td></tr>`;
 }
 
 function abrirModalHistorial(id){
@@ -767,6 +1145,7 @@ async function guardarHistorial(id){
   const { error } = id ? await sb.from('salud_historiales').update(registro).eq('id', id)
                         : await sb.from('salud_historiales').insert(registro);
   if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria(id?'editar':'crear', 'historiales', id, 'Registro clínico');
   cerrarModal(); mostrarToast('Historial guardado.'); cargarTodo();
 }
 
@@ -779,14 +1158,18 @@ function renderInventario(){
     const bajo = p.stock <= p.stock_minimo;
     const vencProx = p.fecha_vencimiento && (new Date(p.fecha_vencimiento) - new Date()) < 1000*60*60*24*30;
     return `<tr>
+      <td><input type="checkbox" class="chk-fila" onchange="toggleUno('productos','${p.id}',this)" ${seleccionados.productos.has(p.id)?'checked':''}></td>
       <td><strong>${p.nombre}</strong><br><span style="color:var(--gris); font-size:12px;">${p.presentacion||''}</span></td>
       <td>${p.categoria||'—'}</td>
       <td>${formatoMoneda(p.precio_venta)}</td>
       <td>${bajo?`<span class="pill pill-coral">${p.stock}</span>`:p.stock}</td>
       <td>${vencProx?`<span class="pill pill-ambar">${p.fecha_vencimiento}</span>`:(p.fecha_vencimiento||'—')}</td>
-      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalProducto('${p.id}')">Editar</button></td>
+      <td style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verDetalles('productos','${p.id}')">Detalles</button>
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalProducto('${p.id}')">Editar</button>
+      </td>
     </tr>`;
-  }).join('') : `<tr><td colspan="6" class="vacio">Sin salud_productos en inventario.</td></tr>`;
+  }).join('') : `<tr><td colspan="7" class="vacio">Sin productos en inventario.</td></tr>`;
 }
 
 function abrirModalProducto(id){
@@ -833,13 +1216,16 @@ async function guardarProducto(id){
   const { error } = id ? await sb.from('salud_productos').update(registro).eq('id', id)
                         : await sb.from('salud_productos').insert(registro);
   if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria(id?'editar':'crear', 'productos', id, registro.nombre);
   cerrarModal(); mostrarToast('Producto guardado.'); cargarTodo();
 }
 
 async function eliminarProducto(id){
   if(!confirm('¿Eliminar este producto del inventario?')) return;
+  const p = cache.salud_productos.find(x=>x.id===id);
   const { error } = await sb.from('salud_productos').delete().eq('id', id);
   if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('eliminar', 'productos', id, p?.nombre||'');
   cerrarModal(); mostrarToast('Producto eliminado.'); cargarTodo();
 }
 
@@ -850,6 +1236,7 @@ function renderFacturas(){
   const tb = document.querySelector('#tabla-salud_facturas tbody');
   tb.innerHTML = cache.salud_facturas.length ? cache.salud_facturas.map(f=>`
     <tr>
+      <td><input type="checkbox" class="chk-fila" onchange="toggleUno('facturas','${f.id}',this)" ${seleccionados.facturas.has(f.id)?'checked':''}></td>
       <td class="font-mono">${f.ncf||'—'}</td>
       <td>${formatoHora(f.creado_en)}</td>
       <td>${f.salud_pacientes?.nombre || f.cliente_nombre || 'Cliente al detalle'}</td>
@@ -857,7 +1244,7 @@ function renderFacturas(){
       <td>${pillEstado(f.estado)}</td>
       <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verFactura('${f.id}')">Ver</button></td>
     </tr>
-  `).join('') : `<tr><td colspan="6" class="vacio">No se han emitido salud_facturas.</td></tr>`;
+  `).join('') : `<tr><td colspan="7" class="vacio">No se han emitido facturas.</td></tr>`;
 }
 
 function abrirModalFactura(){
@@ -933,7 +1320,7 @@ function quitarItemFactura(idx){
 function renderItemsFacturaTemp(){
   const cont = document.getElementById('ff-lista-items');
   if(!itemsFacturaTemp.length){
-    cont.innerHTML = `<div style="color:var(--gris); font-size:13px; padding:8px 0;">Aún no has agregado salud_productos.</div>`;
+    cont.innerHTML = `<div style="color:var(--gris); font-size:13px; padding:8px 0;">Aún no has agregado productos.</div>`;
   } else {
     cont.innerHTML = itemsFacturaTemp.map((i,idx)=>`
       <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--linea); font-size:13.5px;">
@@ -1000,6 +1387,7 @@ async function emitirFactura(){
   // avanzar secuencia NCF
   await sb.from('salud_secuencias_ncf').update({ secuencia_actual: sec.secuencia_actual + 1 }).eq('id', sec.id);
 
+  registrarAuditoria('emitir_factura', 'facturas', facturaCreada.id, `NCF ${numeroNcf} — Total ${formatoMoneda(subtotal+itbis)}`);
   cerrarModal();
   mostrarToast(`Factura ${numeroNcf} emitida.`);
   cargarTodo();
@@ -1033,60 +1421,42 @@ function verFactura(id){
 
 async function anularFactura(id){
   if(!confirm('¿Anular esta factura? Esta acción no puede deshacerse.')) return;
+  const f = cache.salud_facturas.find(x=>x.id===id);
   const { error } = await sb.from('salud_facturas').update({ estado:'anulada' }).eq('id', id);
   if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('anular_factura', 'facturas', id, `NCF ${f?.ncf||''}`);
   cerrarModal(); mostrarToast('Factura anulada.'); cargarTodo();
 }
 
 /* ================= REPORTES ================= */
-async function renderReportes(){
-  const completadas = cache.salud_facturas.filter(f=>f.estado==='completada');
-  const totalVentas = completadas.reduce((s,f)=>s+Number(f.total||0),0);
-  const totalFacturas = completadas.length;
-  const promedio = totalFacturas ? totalVentas/totalFacturas : 0;
-
-  document.getElementById('kpi-reportes').innerHTML = `
-    <div class="kpi"><div class="valor">${formatoMoneda(totalVentas)}</div><div class="etiqueta">Ventas totales</div></div>
-    <div class="kpi"><div class="valor">${totalFacturas}</div><div class="etiqueta">Facturas emitidas</div></div>
-    <div class="kpi"><div class="valor">${formatoMoneda(promedio)}</div><div class="etiqueta">Ticket promedio</div></div>
-  `;
-
-  const { data: items } = await sb.from('salud_factura_items').select('descripcion, cantidad, subtotal_item');
-  const agrupado = {};
-  (items||[]).forEach(i=>{
-    if(!agrupado[i.descripcion]) agrupado[i.descripcion] = { unidades:0, ingresos:0 };
-    agrupado[i.descripcion].unidades += i.cantidad;
-    agrupado[i.descripcion].ingresos += Number(i.subtotal_item||0);
-  });
-  const top = Object.entries(agrupado).sort((a,b)=>b[1].unidades-a[1].unidades).slice(0,10);
-  document.querySelector('#tabla-reporte-salud_productos tbody').innerHTML = top.length ? top.map(([nombre,d])=>`
-    <tr><td>${nombre}</td><td>${d.unidades}</td><td>${formatoMoneda(d.ingresos)}</td></tr>
-  `).join('') : `<tr><td colspan="3" class="vacio">Aún no hay ventas registradas.</td></tr>`;
-
-  const en30dias = new Date(); en30dias.setDate(en30dias.getDate()+30);
-  const vencProx = cache.salud_productos.filter(p=>p.fecha_vencimiento && new Date(p.fecha_vencimiento) <= en30dias && new Date(p.fecha_vencimiento) >= new Date());
-  document.querySelector('#tabla-reporte-vencimientos tbody').innerHTML = vencProx.length ? vencProx.map(p=>`
-    <tr><td>${p.nombre}</td><td>${p.lote||'—'}</td><td>${p.fecha_vencimiento}</td><td>${p.stock}</td></tr>
-  `).join('') : `<tr><td colspan="4" class="vacio">Sin vencimientos próximos.</td></tr>`;
-}
-
 /* ================= USUARIOS (admin) ================= */
 function renderUsuarios(){
-  if(usuarioActual.rol !== 'admin') return;
+  if(!usuarioActual || !tabsDelUsuario().includes('salud_usuarios')) return;
   const tb = document.querySelector('#tabla-salud_usuarios tbody');
   tb.innerHTML = cache.salud_usuarios.length ? cache.salud_usuarios.map(u=>`
     <tr>
+      <td><input type="checkbox" class="chk-fila" onchange="toggleUno('usuarios','${u.id}',this)" ${seleccionados.usuarios.has(u.id)?'checked':''}></td>
       <td>${u.nombre}</td>
       <td class="font-mono">${u.usuario}</td>
       <td><span class="pill pill-verde">${u.rol}</span></td>
       <td>${u.activo?'<span class="pill pill-verde">Activo</span>':'<span class="pill pill-gris">Inactivo</span>'}</td>
-      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalUsuario('${u.id}')">Editar</button></td>
+      <td style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verDetalles('usuarios','${u.id}')">Detalles</button>
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalUsuario('${u.id}')">Editar</button>
+      </td>
     </tr>
   `).join('') : '';
 }
 
 function abrirModalUsuario(id){
   const u = id ? cache.salud_usuarios.find(x=>x.id===id) : null;
+  const permisosActuales = (u?.permisos_modulos && u.permisos_modulos.length) ? u.permisos_modulos : (TABS_POR_ROL[u?.rol] || []);
+  const checkboxesPermisos = MODULOS_PERMISO.map(m=>`
+    <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; padding:7px 0; border-bottom:1px solid var(--linea);">
+      <input type="checkbox" class="uf-permiso chk-fila" value="${m.clave}" ${permisosActuales.includes(m.clave)?'checked':''}> ${m.etiqueta}
+    </label>
+  `).join('');
+
   abrirModal(`
     <h3>${u?'Editar usuario':'Nuevo usuario'}</h3>
     <div class="campo"><label>Nombre completo</label><input id="uf-nombre" value="${u?.nombre||''}"></div>
@@ -1099,12 +1469,26 @@ function abrirModalUsuario(id){
           <option value="doctor" ${u?.rol==='doctor'?'selected':''}>Doctor</option>
           <option value="farmaceutico" ${u?.rol==='farmaceutico'?'selected':''}>Farmacéutico</option>
           <option value="cajero" ${u?.rol==='cajero'?'selected':''}>Cajero</option>
+          <option value="enfermeria" ${u?.rol==='enfermeria'?'selected':''}>Enfermería</option>
+          <option value="laboratorio" ${u?.rol==='laboratorio'?'selected':''}>Laboratorio</option>
+          <option value="admision" ${u?.rol==='admision'?'selected':''}>Admisión</option>
+          <option value="seguros" ${u?.rol==='seguros'?'selected':''}>Seguros</option>
         </select>
       </div>
       <div class="campo"><label>Estado</label>
         <select id="uf-activo"><option value="true" ${u?.activo!==false?'selected':''}>Activo</option><option value="false" ${u?.activo===false?'selected':''}>Inactivo</option></select>
       </div>
     </div>
+
+    <div class="campo">
+      <label style="display:flex; align-items:center; justify-content:space-between;">
+        <span>Acceso a módulos</span>
+        <button type="button" class="btn btn-fantasma" style="padding:5px 9px; font-size:11.5px;" onclick="sugerirPermisosSegunRol()">Sugerir según rol</button>
+      </label>
+      <div style="margin-top:6px;">${checkboxesPermisos}</div>
+      <p style="font-size:11.5px; color:var(--gris); margin-top:8px;">El Panel principal y el Manual siempre son visibles para todos los usuarios. Estos checkboxes controlan el resto.</p>
+    </div>
+
     <div class="modal-acciones">
       <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
       <button class="btn btn-primario" style="width:auto;" onclick="guardarUsuario(${u?`'${u.id}'`:'null'})">Guardar</button>
@@ -1112,22 +1496,515 @@ function abrirModalUsuario(id){
   `);
 }
 
+function sugerirPermisosSegunRol(){
+  const rol = document.getElementById('uf-rol').value;
+  const sugeridos = TABS_POR_ROL[rol] || [];
+  document.querySelectorAll('.uf-permiso').forEach(chk=>{ chk.checked = sugeridos.includes(chk.value); });
+}
+
 async function guardarUsuario(id){
+  const permisos_modulos = Array.from(document.querySelectorAll('.uf-permiso:checked')).map(c=>c.value);
   const registro = {
     nombre: document.getElementById('uf-nombre').value.trim(),
     usuario: document.getElementById('uf-usuario').value.trim(),
     password: document.getElementById('uf-password').value,
     rol: document.getElementById('uf-rol').value,
     activo: document.getElementById('uf-activo').value === 'true',
+    permisos_modulos,
   };
   if(!registro.nombre || !registro.usuario || !registro.password){ mostrarToast('Completa todos los campos.'); return; }
+  if(!permisos_modulos.length){ mostrarToast('Marca al menos un módulo de acceso.'); return; }
 
   const { error } = id ? await sb.from('salud_usuarios').update(registro).eq('id', id)
                         : await sb.from('salud_usuarios').insert(registro);
   if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria(id?'editar':'crear', 'usuarios', id, `${registro.usuario} (${registro.rol}) — módulos: ${permisos_modulos.join(', ')}`);
   cerrarModal(); mostrarToast('Usuario guardado.'); cargarTodo();
 }
 
+function poblarFiltrosReporte(){
+  const selPaciente = document.getElementById('rf-paciente');
+  const selDoctor = document.getElementById('rf-doctor');
+  const selCategoria = document.getElementById('rf-categoria');
+  if(selPaciente && selPaciente.options.length<=1) selPaciente.innerHTML = '<option value="">Todos</option>' + cache.salud_pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  if(selDoctor && selDoctor.options.length<=1) selDoctor.innerHTML = '<option value="">Todos</option>' + cache.salud_usuarios.filter(u=>u.rol==='doctor'||u.rol==='admin').map(u=>`<option value="${u.id}">${u.nombre}</option>`).join('');
+  if(selCategoria && selCategoria.options.length<=1){
+    const categorias = [...new Set(cache.salud_productos.map(p=>p.categoria).filter(Boolean))];
+    selCategoria.innerHTML = '<option value="">Todas</option>' + categorias.map(c=>`<option value="${c}">${c}</option>`).join('');
+  }
+}
+
+function leerFiltrosReporte(){
+  return {
+    desde: document.getElementById('rf-desde')?.value || null,
+    hasta: document.getElementById('rf-hasta')?.value || null,
+    paciente: document.getElementById('rf-paciente')?.value || null,
+    doctor: document.getElementById('rf-doctor')?.value || null,
+    categoria: document.getElementById('rf-categoria')?.value || null,
+    estadoFactura: document.getElementById('rf-estado-factura')?.value || null,
+    metodo: document.getElementById('rf-metodo')?.value || null,
+    tipoEcf: document.getElementById('rf-tipoecf')?.value || null,
+  };
+}
+
+function facturasFiltradas(){
+  const f = leerFiltrosReporte();
+  return cache.salud_facturas.filter(fa=>{
+    if(f.desde && fa.creado_en < f.desde) return false;
+    if(f.hasta && fa.creado_en > f.hasta+'T23:59:59') return false;
+    if(f.paciente && fa.paciente_id !== f.paciente) return false;
+    if(f.estadoFactura && fa.estado !== f.estadoFactura) return false;
+    if(f.metodo && fa.metodo_pago !== f.metodo) return false;
+    if(f.tipoEcf && fa.tipo_ecf !== f.tipoEcf) return false;
+    return true;
+  });
+}
+
+function citasFiltradas(){
+  const f = leerFiltrosReporte();
+  return cache.salud_citas.filter(c=>{
+    if(f.desde && c.fecha < f.desde) return false;
+    if(f.hasta && c.fecha > f.hasta+'T23:59:59') return false;
+    if(f.paciente && c.paciente_id !== f.paciente) return false;
+    if(f.doctor && c.doctor_id !== f.doctor) return false;
+    return true;
+  });
+}
+
+function productosFiltrados(){
+  const f = leerFiltrosReporte();
+  return cache.salud_productos.filter(p=> !f.categoria || p.categoria === f.categoria);
+}
+
+async function renderReportes(){
+  poblarFiltrosReporte();
+  const facturas = facturasFiltradas();
+  const completadas = facturas.filter(f=>f.estado==='completada');
+  const totalVentas = completadas.reduce((s,f)=>s+Number(f.total||0),0);
+  const totalFacturas = completadas.length;
+  const promedio = totalFacturas ? totalVentas/totalFacturas : 0;
+
+  document.getElementById('kpi-reportes').innerHTML = `
+    <div class="kpi"><div class="valor">${formatoMoneda(totalVentas)}</div><div class="etiqueta">Ventas totales</div></div>
+    <div class="kpi"><div class="valor">${totalFacturas}</div><div class="etiqueta">Facturas emitidas</div></div>
+    <div class="kpi"><div class="valor">${formatoMoneda(promedio)}</div><div class="etiqueta">Ticket promedio</div></div>
+  `;
+
+  document.querySelector('#tabla-reporte-facturas tbody').innerHTML = facturas.length ? facturas.map(f=>`
+    <tr><td class="font-mono">${f.ncf||'—'}</td><td>${formatoHora(f.creado_en)}</td><td>${f.salud_pacientes?.nombre||f.cliente_nombre||'Cliente al detalle'}</td><td>${f.metodo_pago||'—'}</td><td>${formatoMoneda(f.total)}</td><td>${pillEstado(f.estado)}</td></tr>
+  `).join('') : `<tr><td colspan="6" class="vacio">Ninguna factura coincide con los filtros.</td></tr>`;
+
+  const idsFacturas = new Set(facturas.map(f=>f.id));
+  const { data: items } = await sb.from('salud_factura_items').select('*');
+  const agrupado = {};
+  (items||[]).filter(i=>idsFacturas.has(i.factura_id)).forEach(i=>{
+    if(!agrupado[i.descripcion]) agrupado[i.descripcion] = { unidades:0, ingresos:0 };
+    agrupado[i.descripcion].unidades += i.cantidad;
+    agrupado[i.descripcion].ingresos += Number(i.subtotal_item||0);
+  });
+  const top = Object.entries(agrupado).sort((a,b)=>b[1].unidades-a[1].unidades).slice(0,10);
+  document.querySelector('#tabla-reporte-salud_productos tbody').innerHTML = top.length ? top.map(([nombre,d])=>`
+    <tr><td>${nombre}</td><td>${d.unidades}</td><td>${formatoMoneda(d.ingresos)}</td></tr>
+  `).join('') : `<tr><td colspan="3" class="vacio">Aún no hay ventas registradas.</td></tr>`;
+
+  const productos = productosFiltrados();
+  const en30dias = new Date(); en30dias.setDate(en30dias.getDate()+30);
+  const vencProx = productos.filter(p=>p.fecha_vencimiento && new Date(p.fecha_vencimiento) <= en30dias && new Date(p.fecha_vencimiento) >= new Date());
+  document.querySelector('#tabla-reporte-vencimientos tbody').innerHTML = vencProx.length ? vencProx.map(p=>`
+    <tr><td>${p.nombre}</td><td>${p.lote||'—'}</td><td>${p.fecha_vencimiento}</td><td>${p.stock}</td></tr>
+  `).join('') : `<tr><td colspan="4" class="vacio">Sin vencimientos próximos.</td></tr>`;
+
+  const citas = citasFiltradas();
+  document.querySelector('#tabla-reporte-citas tbody').innerHTML = citas.length ? citas.map(c=>`
+    <tr><td>${formatoHora(c.fecha)}</td><td>${c.salud_pacientes?.nombre||'—'}</td><td>${c.salud_usuarios?.nombre||'—'}</td><td>${pillEstado(c.estado)}</td></tr>
+  `).join('') : `<tr><td colspan="4" class="vacio">Ninguna cita coincide con los filtros.</td></tr>`;
+}
+
+function aplicarFiltrosReporte(){ renderReportes(); }
+function limpiarFiltrosReporte(){
+  ['rf-desde','rf-hasta','rf-paciente','rf-doctor','rf-categoria','rf-estado-factura','rf-metodo','rf-tipoecf'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  renderReportes();
+}
+
+function abrirExportarReporte(){
+  abrirModal(`
+    <h3>Exportar reporte</h3>
+    <p style="font-size:13px; color:var(--gris); margin-bottom:14px;">El reporte tiene varias tablas (facturas, citas, inventario). Excel las incluye todas en hojas separadas; CSV solo exporta las facturas filtradas.</p>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="btn btn-primario" style="width:100%; justify-content:flex-start;" onclick="exportarReporteCompleto(); cerrarModal();">📊 Excel (.xlsx) — todas las tablas</button>
+      <button class="btn btn-fantasma" style="width:100%; justify-content:flex-start;" onclick="exportarReporteCSV(); cerrarModal();">📄 CSV (.csv) — solo facturas</button>
+      <button class="btn btn-fantasma" style="width:100%; justify-content:flex-start;" onclick="cerrarModal(); imprimirReporteCompleto();">🖨 PDF (imprimir / guardar como PDF)</button>
+    </div>
+    <div class="modal-acciones"><button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button></div>
+  `);
+}
+
+function exportarReporteCSV(){
+  const facturas = facturasFiltradas().map(f=>({NCF:f.ncf, Fecha:f.creado_en, Cliente:f.salud_pacientes?.nombre||f.cliente_nombre||'Cliente al detalle', Método:f.metodo_pago, Subtotal:f.subtotal, ITBIS:f.itbis, Total:f.total, Estado:f.estado}));
+  const ws = XLSX.utils.json_to_sheet(facturas);
+  const csv = XLSX.utils.sheet_to_csv(ws);
+  const blob = new Blob(["\ufeff"+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `reporte_facturas_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportarReporteCompleto(){
+  const wb = XLSX.utils.book_new();
+  const facturas = facturasFiltradas().map(f=>({NCF:f.ncf, Fecha:f.creado_en, Cliente:f.salud_pacientes?.nombre||f.cliente_nombre||'Cliente al detalle', Método:f.metodo_pago, Subtotal:f.subtotal, ITBIS:f.itbis, Total:f.total, Estado:f.estado}));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(facturas), 'Facturas');
+  const citas = citasFiltradas().map(c=>({Fecha:c.fecha, Paciente:c.salud_pacientes?.nombre||'', Doctor:c.salud_usuarios?.nombre||'', Estado:c.estado}));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(citas), 'Citas');
+  const productos = productosFiltrados().map(p=>({Nombre:p.nombre, Categoría:p.categoria, Stock:p.stock, 'Stock mínimo':p.stock_minimo, Vencimiento:p.fecha_vencimiento}));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(productos), 'Inventario');
+  XLSX.writeFile(wb, `reporte_shado_salud_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function imprimirReporteCompleto(){
+  cambiarTab('reportes');
+  setTimeout(()=>window.print(), 200);
+}
+
+/* ============================================================
+   MOTOR GENÉRICO — Excel, plantillas, selección, detalles, respaldo
+   ============================================================ */
+const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria' };
+
+function filaParaExcel(modulo, row){
+  switch(modulo){
+    case 'pacientes': return {Nombre:row.nombre, 'Cédula':row.cedula, 'Teléfono':row.telefono, 'Dirección':row.direccion, 'Fecha nacimiento':row.fecha_nacimiento, Sexo:row.sexo, Alergias:row.alergias, 'Condiciones crónicas':row.condiciones_cronicas, 'Contacto emergencia':row.contacto_emergencia};
+    case 'citas': return {Fecha:row.fecha, Paciente:row.salud_pacientes?.nombre||'', Doctor:row.salud_usuarios?.nombre||'', Motivo:row.motivo, Estado:row.estado, Notas:row.notas};
+    case 'historiales': return {Fecha:row.fecha, Paciente:row.salud_pacientes?.nombre||'', Doctor:row.salud_usuarios?.nombre||'', 'Diagnóstico':row.diagnostico, Tratamiento:row.tratamiento, Receta:row.receta, Observaciones:row.observaciones};
+    case 'productos': return {Nombre:row.nombre, 'Categoría':row.categoria, Laboratorio:row.laboratorio, 'Presentación':row.presentacion, 'Precio compra':row.precio_compra, 'Precio venta':row.precio_venta, ITBIS:row.itbis_aplica, Stock:row.stock, 'Stock mínimo':row.stock_minimo, Lote:row.lote, Vencimiento:row.fecha_vencimiento};
+    case 'facturas': return {NCF:row.ncf, 'Tipo e-CF':row.tipo_ecf, Cliente:row.salud_pacientes?.nombre||row.cliente_nombre||'Cliente al detalle', Subtotal:row.subtotal, ITBIS:row.itbis, Total:row.total, 'Método':row.metodo_pago, Estado:row.estado, Fecha:row.creado_en};
+    case 'usuarios': return {Nombre:row.nombre, Usuario:row.usuario, 'Contraseña':row.password, Rol:row.rol, Activo:row.activo, 'Módulos permitidos':(row.permisos_modulos||[]).join(', ')};
+    case 'auditoria': return {Fecha:row.creado_en, Usuario:row.usuario_nombre, Rol:row.usuario_rol, 'Acción':row.accion, 'Módulo':row.modulo, Detalle:row.detalle};
+    default: return row;
+  }
+}
+
+function obtenerDatosModulo(modulo, soloSeleccion){
+  const cfg = CONFIG_MODULOS[modulo];
+  let datos = cache[cfg.cacheKey] || [];
+  if(soloSeleccion){
+    const ids = seleccionados[modulo];
+    if(!ids || !ids.size){ mostrarToast('No hay filas seleccionadas.'); return null; }
+    datos = datos.filter(d=>ids.has(d.id));
+  }
+  return datos.map(row=>filaParaExcel(modulo,row));
+}
+
+function abrirExportar(modulo, soloSeleccion){
+  const cfg = CONFIG_MODULOS[modulo];
+  abrirModal(`
+    <h3>Exportar ${cfg.titulo}${soloSeleccion?' (selección)':''}</h3>
+    <p style="font-size:13px; color:var(--gris); margin-bottom:14px;">Elige el formato del archivo a descargar.</p>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="btn btn-primario" style="width:100%; justify-content:flex-start;" onclick="exportarExcel('${modulo}', ${!!soloSeleccion}); cerrarModal();">📊 Excel (.xlsx)</button>
+      <button class="btn btn-fantasma" style="width:100%; justify-content:flex-start;" onclick="exportarCSV('${modulo}', ${!!soloSeleccion}); cerrarModal();">📄 CSV (.csv)</button>
+      <button class="btn btn-fantasma" style="width:100%; justify-content:flex-start;" onclick="cerrarModal(); imprimirModulo('${modulo}');">🖨 PDF (imprimir / guardar como PDF)</button>
+    </div>
+    <div class="modal-acciones"><button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button></div>
+  `);
+}
+
+function exportarExcel(modulo, soloSeleccion){
+  const datos = obtenerDatosModulo(modulo, soloSeleccion);
+  if(!datos) return;
+  const cfg = CONFIG_MODULOS[modulo];
+  const ws = XLSX.utils.json_to_sheet(datos);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, cfg.titulo.slice(0,31));
+  XLSX.writeFile(wb, `${modulo}${soloSeleccion?'_seleccion':''}_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function exportarCSV(modulo, soloSeleccion){
+  const datos = obtenerDatosModulo(modulo, soloSeleccion);
+  if(!datos) return;
+  const ws = XLSX.utils.json_to_sheet(datos);
+  const csv = XLSX.utils.sheet_to_csv(ws);
+  const blob = new Blob(["\ufeff"+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${modulo}${soloSeleccion?'_seleccion':''}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function descargarPlantilla(modulo){
+  const cfg = CONFIG_MODULOS[modulo];
+  const encabezados = cfg.columnas.map(c=>c.etiqueta);
+  const ws = XLSX.utils.aoa_to_sheet([encabezados]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+  XLSX.writeFile(wb, `plantilla_${modulo}.xlsx`);
+}
+
+async function prepararRegistroImportado(modulo, obj){
+  if(modulo==='pacientes'){
+    if(!obj.nombre) return null;
+    return { nombre:obj.nombre, cedula:obj.cedula, telefono:obj.telefono, direccion:obj.direccion, fecha_nacimiento:obj.fecha_nacimiento||null, sexo:obj.sexo||null, alergias:obj.alergias, condiciones_cronicas:obj.condiciones_cronicas, contacto_emergencia:obj.contacto_emergencia };
+  }
+  if(modulo==='citas'){
+    const paciente = cache.salud_pacientes.find(p=>p.cedula===obj.paciente_cedula);
+    const doctor = cache.salud_usuarios.find(u=>u.usuario===obj.doctor_usuario);
+    if(!paciente || !obj.fecha) return null;
+    return { paciente_id:paciente.id, doctor_id:doctor?doctor.id:null, fecha:obj.fecha.replace(' ','T'), motivo:obj.motivo, estado:obj.estado||'pendiente', notas:obj.notas };
+  }
+  if(modulo==='historiales'){
+    const paciente = cache.salud_pacientes.find(p=>p.cedula===obj.paciente_cedula);
+    if(!paciente) return null;
+    return { paciente_id:paciente.id, doctor_id:usuarioActual.id, diagnostico:obj.diagnostico, tratamiento:obj.tratamiento, receta:obj.receta, observaciones:obj.observaciones };
+  }
+  if(modulo==='productos'){
+    if(!obj.nombre) return null;
+    return { nombre:obj.nombre, categoria:obj.categoria, laboratorio:obj.laboratorio, presentacion:obj.presentacion, precio_compra:Number(obj.precio_compra)||0, precio_venta:Number(obj.precio_venta)||0, itbis_aplica: obj.itbis_aplica!=='false', stock:Number(obj.stock)||0, stock_minimo:Number(obj.stock_minimo)||0, lote:obj.lote, fecha_vencimiento:obj.fecha_vencimiento||null };
+  }
+  if(modulo==='usuarios'){
+    if(!obj.nombre || !obj.usuario || !obj.password) return null;
+    const rolFinal = obj.rol||'cajero';
+    const permisos_modulos = obj.permisos_modulos
+      ? obj.permisos_modulos.split(',').map(s=>s.trim()).filter(Boolean)
+      : (TABS_POR_ROL[rolFinal] || []);
+    return { nombre:obj.nombre, usuario:obj.usuario, password:obj.password, rol:rolFinal, activo: obj.activo!=='false', permisos_modulos };
+  }
+  return null;
+}
+
+async function importarExcel(event, modulo){
+  const archivo = event.target.files[0];
+  if(!archivo) return;
+  const cfg = CONFIG_MODULOS[modulo];
+  const datosBin = await archivo.arrayBuffer();
+  const wb = XLSX.read(datosBin, {type:'array'});
+  const hoja = wb.Sheets[wb.SheetNames[0]];
+  const filas = XLSX.utils.sheet_to_json(hoja, {header:1, raw:false});
+  const registros = filas.slice(1).filter(f=>f.some(v=>v!==undefined && v!==''));
+
+  let insertados = 0, errores = 0;
+  for(const fila of registros){
+    const obj = {};
+    cfg.columnas.forEach((col,i)=>{ obj[col.clave] = fila[i]!==undefined ? String(fila[i]).trim() : ''; });
+    const registroFinal = await prepararRegistroImportado(modulo, obj);
+    if(!registroFinal){ errores++; continue; }
+    const { error } = await sb.from(cfg.tablaSb).insert(registroFinal);
+    if(error) errores++; else insertados++;
+  }
+  event.target.value = '';
+  registrarAuditoria('importar', modulo, null, `${insertados} agregado(s), ${errores} con error — archivo: ${archivo.name}`);
+  mostrarToast(`Importación completa: ${insertados} agregado(s), ${errores} con error.`);
+  cargarTodo();
+}
+
+function imprimirModulo(modulo){
+  const tab = MODULO_A_TAB[modulo];
+  if(tab) cambiarTab(tab);
+  setTimeout(()=>window.print(), 200);
+}
+
+function toggleTodos(modulo, checkboxHeader){
+  const cfg = CONFIG_MODULOS[modulo];
+  const datos = cache[cfg.cacheKey] || [];
+  if(checkboxHeader.checked){ datos.forEach(d=>seleccionados[modulo].add(d.id)); }
+  else { seleccionados[modulo].clear(); }
+  cfg.renderFn();
+  actualizarBarraSeleccion(modulo);
+}
+
+function toggleUno(modulo, id, checkboxEl){
+  if(checkboxEl.checked) seleccionados[modulo].add(id); else seleccionados[modulo].delete(id);
+  actualizarBarraSeleccion(modulo);
+}
+
+function actualizarBarraSeleccion(modulo){
+  const barra = document.getElementById('seleccion-'+modulo);
+  const txt = document.getElementById('seleccion-'+modulo+'-txt');
+  if(!barra) return;
+  const n = seleccionados[modulo].size;
+  if(n>0){ barra.classList.add('activa'); if(txt) txt.textContent = `${n} seleccionado${n>1?'s':''}`; }
+  else { barra.classList.remove('activa'); }
+}
+
+async function eliminarSeleccionados(modulo){
+  const cfg = CONFIG_MODULOS[modulo];
+  const ids = Array.from(seleccionados[modulo]);
+  if(!ids.length) return;
+  if(!confirm(`¿Eliminar ${ids.length} registro(s) seleccionado(s)? Esta acción no se puede deshacer.`)) return;
+  const { error } = await sb.from(cfg.tablaSb).delete().in('id', ids);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('eliminar', modulo, null, `Eliminación en lote: ${ids.length} registro(s)`);
+  seleccionados[modulo].clear();
+  mostrarToast('Registros eliminados.');
+  cargarTodo();
+}
+
+function verDetalles(modulo, id){
+  const cfg = CONFIG_MODULOS[modulo];
+  const registro = (cache[cfg.cacheKey]||[]).find(x=>x.id===id);
+  if(!registro) return;
+  const filas = filaParaExcel(modulo, registro);
+  const filasHtml = Object.entries(filas).map(([etiqueta,valor])=>`
+    <div class="detalle-fila"><span class="etiqueta-d">${etiqueta}</span><span class="valor-d">${(valor===null||valor===undefined||valor==='')?'—':valor}</span></div>
+  `).join('');
+  abrirModal(`
+    <h3>Detalles — ${cfg.titulo}</h3>
+    ${filasHtml}
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="imprimirDetalle()">🖨 Imprimir</button>
+    </div>
+  `);
+}
+
+function imprimirDetalle(){
+  document.body.classList.add('imprimiendo-detalle');
+  window.print();
+  setTimeout(()=>document.body.classList.remove('imprimiendo-detalle'), 500);
+}
+
+function respaldoCompleto(){
+  const wb = XLSX.utils.book_new();
+  Object.entries(CONFIG_MODULOS).forEach(([modulo,cfg])=>{
+    const datos = (cache[cfg.cacheKey]||[]).map(row=>filaParaExcel(modulo,row));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(datos), cfg.titulo.slice(0,31));
+  });
+  XLSX.writeFile(wb, `respaldo_shado_salud_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+async function restaurarRespaldo(event){
+  const archivo = event.target.files[0];
+  if(!archivo) return;
+  if(!confirm('Esto agregará los registros del respaldo a Pacientes, Inventario y Usuarios (Citas, Historiales y Facturas no se restauran automáticamente por sus referencias cruzadas). ¿Continuar?')){ event.target.value=''; return; }
+  const datosBin = await archivo.arrayBuffer();
+  const wb = XLSX.read(datosBin, {type:'array'});
+  let total = 0;
+
+  if(wb.Sheets['Pacientes']){
+    for(const f of XLSX.utils.sheet_to_json(wb.Sheets['Pacientes'])){
+      if(!f['Nombre']) continue;
+      await sb.from('salud_pacientes').insert({
+        nombre:f['Nombre'], cedula:f['Cédula'], telefono:f['Teléfono'], direccion:f['Dirección'],
+        fecha_nacimiento:f['Fecha nacimiento']||null, sexo:f['Sexo']||null, alergias:f['Alergias'],
+        condiciones_cronicas:f['Condiciones crónicas'], contacto_emergencia:f['Contacto emergencia']
+      });
+      total++;
+    }
+  }
+  if(wb.Sheets['Inventario']){
+    for(const f of XLSX.utils.sheet_to_json(wb.Sheets['Inventario'])){
+      if(!f['Nombre']) continue;
+      await sb.from('salud_productos').insert({
+        nombre:f['Nombre'], categoria:f['Categoría'], laboratorio:f['Laboratorio'], presentacion:f['Presentación'],
+        precio_compra:Number(f['Precio compra'])||0, precio_venta:Number(f['Precio venta'])||0,
+        itbis_aplica: f['ITBIS']!==false && f['ITBIS']!=='false',
+        stock:Number(f['Stock'])||0, stock_minimo:Number(f['Stock mínimo'])||0, lote:f['Lote'], fecha_vencimiento:f['Vencimiento']||null
+      });
+      total++;
+    }
+  }
+  if(wb.Sheets['Usuarios']){
+    for(const f of XLSX.utils.sheet_to_json(wb.Sheets['Usuarios'])){
+      if(!f['Usuario']) continue;
+      const rolFinal = f['Rol']||'cajero';
+      const permisos_modulos = f['Módulos permitidos']
+        ? String(f['Módulos permitidos']).split(',').map(s=>s.trim()).filter(Boolean)
+        : (TABS_POR_ROL[rolFinal] || []);
+      await sb.from('salud_usuarios').insert({
+        nombre:f['Nombre'], usuario:f['Usuario'], password:f['Contraseña']||'cambiar123', rol:rolFinal,
+        activo: f['Activo']!==false && f['Activo']!=='false', permisos_modulos
+      });
+      total++;
+    }
+  }
+  event.target.value = '';
+  registrarAuditoria('restaurar_respaldo', 'sistema', null, `${total} registro(s) restaurado(s) desde ${archivo.name}`);
+  mostrarToast(`Respaldo restaurado: ${total} registro(s) agregado(s).`);
+  cargarTodo();
+}
+function descargarManual(){
+  document.body.classList.add('imprimiendo-manual');
+  cambiarTab('manual');
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>document.body.classList.remove('imprimiendo-manual'), 500);
+  }, 150);
+}
+
+/* ============================================================
+   AUDITORÍA
+   ============================================================ */
+async function registrarAuditoria(accion, modulo, registroId, detalle){
+  try{
+    await sb.from('salud_auditoria').insert({
+      usuario_id: usuarioActual?.id || null,
+      usuario_nombre: usuarioActual?.nombre || 'Desconocido',
+      usuario_rol: usuarioActual?.rol || null,
+      accion, modulo, registro_id: registroId || null, detalle: detalle || ''
+    });
+  }catch(e){ /* la auditoría nunca debe bloquear la acción principal */ }
+}
+
+function leerFiltrosAuditoria(){
+  return {
+    desde: document.getElementById('af-desde')?.value || null,
+    hasta: document.getElementById('af-hasta')?.value || null,
+    usuario: document.getElementById('af-usuario')?.value || null,
+    accion: document.getElementById('af-accion')?.value || null,
+    modulo: document.getElementById('af-modulo')?.value || null,
+  };
+}
+
+function limpiarFiltrosAuditoria(){
+  ['af-desde','af-hasta','af-usuario','af-accion','af-modulo'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  renderAuditoria();
+}
+
+function renderAuditoria(){
+  if(!usuarioActual || !tabsDelUsuario().includes('auditoria')) return;
+  const selUsuario = document.getElementById('af-usuario');
+  if(selUsuario && selUsuario.options.length<=1){
+    selUsuario.innerHTML = '<option value="">Todos</option>' + cache.salud_usuarios.map(u=>`<option value="${u.nombre}">${u.nombre}</option>`).join('');
+  }
+  const f = leerFiltrosAuditoria();
+  const lista = (cache.salud_auditoria||[]).filter(a=>{
+    if(f.desde && a.creado_en < f.desde) return false;
+    if(f.hasta && a.creado_en > f.hasta+'T23:59:59') return false;
+    if(f.usuario && a.usuario_nombre !== f.usuario) return false;
+    if(f.accion && a.accion !== f.accion) return false;
+    if(f.modulo && a.modulo !== f.modulo) return false;
+    return true;
+  });
+  const tb = document.querySelector('#tabla-salud_auditoria tbody');
+  if(!tb) return;
+  tb.innerHTML = lista.length ? lista.map(a=>`
+    <tr>
+      <td>${formatoHora(a.creado_en)}</td>
+      <td>${a.usuario_nombre||'—'}</td>
+      <td>${a.usuario_rol||'—'}</td>
+      <td>${a.accion}</td>
+      <td>${a.modulo||'—'}</td>
+      <td>${a.detalle||'—'}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="6" class="vacio">Ninguna acción coincide con los filtros.</td></tr>`;
+}
+
+function compartirSistema(){
+  const url = window.location.href;
+  const titulo = 'SHADO Salud';
+  const texto = 'Accede al sistema de gestión de salud';
+  if(navigator.share){
+    navigator.share({title:titulo, text:texto, url}).catch(()=>{});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=> mostrarToast('Enlace copiado al portapapeles.'))
+      .catch(()=> prompt('Copia este enlace para compartirlo:', url));
+  } else {
+    prompt('Copia este enlace para compartirlo:', url);
+  }
+}
 </script>
 </body>
 </html>
