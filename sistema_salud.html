@@ -192,21 +192,7 @@ body{
   white-space:nowrap;
 }
 .tab-btn.activa{color:var(--verde-boticario); border-bottom-color:var(--coral);}
-
-.menu-grupo{position:relative; flex:0 0 auto;}
 .grupo-btn{white-space:nowrap;}
-.submenu{
-  display:none; position:fixed; margin-top:2px;
-  background:#fff; border:1px solid var(--linea); border-radius:8px;
-  box-shadow:0 8px 24px rgba(27,34,31,0.2); min-width:190px; z-index:300;
-  flex-direction:column; padding:6px; max-height:70vh; overflow-y:auto;
-}
-.submenu.abierto{display:flex;}
-.submenu-item{
-  background:none; border:none; text-align:left; padding:10px 12px; font-size:13px; font-weight:600;
-  color:var(--tinta); cursor:pointer; border-radius:6px; white-space:nowrap;
-}
-.submenu-item:hover, .submenu-item.activa{background:var(--crema); color:var(--verde-boticario);}
 
 .contenido{padding:20px; max-width:1100px; margin:0 auto;}
 .vista{display:none;}
@@ -1082,13 +1068,7 @@ function construirTabs(){
   GRUPOS_MENU.forEach(grupo=>{
     const disponibles = grupo.tabs.filter(t=>tabs.includes(t));
     if(!disponibles.length) return;
-    html += `
-      <div class="menu-grupo">
-        <button class="tab-btn grupo-btn" onclick="toggleGrupoMenu('${grupo.clave}', this)">${grupo.nombre} ▾</button>
-        <div class="submenu" id="submenu-${grupo.clave}">
-          ${disponibles.map(t=>`<button class="submenu-item" data-tab="${t}" onclick="cambiarTab('${t}'); cerrarSubmenus();">${NOMBRE_TAB[t]}</button>`).join('')}
-        </div>
-      </div>`;
+    html += `<button class="tab-btn grupo-btn" data-grupo="${grupo.clave}" onclick="abrirMenuGrupo('${grupo.clave}')">${grupo.nombre} ▾</button>`;
   });
 
   if(tabs.includes('manual')) html += `<button class="tab-btn" data-tab="manual" onclick="cambiarTab('manual')">${NOMBRE_TAB.manual}</button>`;
@@ -1098,26 +1078,22 @@ function construirTabs(){
   document.getElementById('vista-'+tabs[0])?.classList.add('activa');
 }
 
-function toggleGrupoMenu(clave, btnEl){
-  const el = document.getElementById('submenu-'+clave);
-  const yaAbierto = el.classList.contains('abierto');
-  cerrarSubmenus();
-  if(!yaAbierto){
-    const rect = btnEl.getBoundingClientRect();
-    el.style.top = (rect.bottom + 4) + 'px';
-    el.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 200)) + 'px';
-    el.classList.add('abierto');
-  }
+function abrirMenuGrupo(clave){
+  const grupo = GRUPOS_MENU.find(g=>g.clave===clave);
+  if(!grupo) return;
+  const tabs = tabsDelUsuario();
+  const disponibles = grupo.tabs.filter(t=>tabs.includes(t));
+  abrirModal(`
+    <h3>${grupo.nombre}</h3>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">
+      ${disponibles.map(t=>`<button class="btn btn-fantasma" style="width:100%; justify-content:flex-start;" onclick="cerrarModal(); cambiarTab('${t}');">${NOMBRE_TAB[t]}</button>`).join('')}
+    </div>
+    <div class="modal-acciones"><button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button></div>
+  `);
 }
-function cerrarSubmenus(){
-  document.querySelectorAll('.submenu').forEach(s=>s.classList.remove('abierto'));
-}
-document.addEventListener('click', (e)=>{
-  if(!e.target.closest('.menu-grupo')) cerrarSubmenus();
-});
 
 function cambiarTab(tab){
-  document.querySelectorAll('.tab-btn, .submenu-item').forEach(b=>b.classList.toggle('activa', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('activa', b.dataset.tab===tab));
   document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
   document.getElementById('vista-'+tab).classList.add('activa');
 }
