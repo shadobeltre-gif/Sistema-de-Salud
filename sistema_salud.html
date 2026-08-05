@@ -193,6 +193,21 @@ body{
 }
 .tab-btn.activa{color:var(--verde-boticario); border-bottom-color:var(--coral);}
 
+.menu-grupo{position:relative; flex:0 0 auto;}
+.grupo-btn{white-space:nowrap;}
+.submenu{
+  display:none; position:absolute; top:100%; left:0; margin-top:2px;
+  background:#fff; border:1px solid var(--linea); border-radius:8px;
+  box-shadow:0 8px 24px rgba(27,34,31,0.15); min-width:190px; z-index:100;
+  flex-direction:column; padding:6px;
+}
+.submenu.abierto{display:flex;}
+.submenu-item{
+  background:none; border:none; text-align:left; padding:10px 12px; font-size:13px; font-weight:600;
+  color:var(--tinta); cursor:pointer; border-radius:6px; white-space:nowrap;
+}
+.submenu-item:hover, .submenu-item.activa{background:var(--crema); color:var(--verde-boticario);}
+
 .contenido{padding:20px; max-width:1100px; margin:0 auto;}
 .vista{display:none;}
 .vista.activa{display:block; animation:fadein .2s ease;}
@@ -403,6 +418,102 @@ tr:last-child td{border-bottom:none;}
       </div>
       <div class="panel tabla-wrap">
         <table id="tabla-salud_historiales"><thead><tr><th><input type="checkbox" class="chk-fila" onchange="toggleTodos('historiales',this)"></th><th>Fecha</th><th>Paciente</th><th>Diagnóstico</th><th>Doctor</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- EMERGENCIAS -->
+    <div class="vista" id="vista-emergencias">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Atención inmediata</div><h2>Emergencias</h2></div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-emergencia" placeholder="Buscar paciente..." oninput="renderEmergencias()">
+          <button class="btn btn-coral" onclick="abrirModalEmergencia()">+ Nueva atención</button>
+        </div>
+      </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="abrirExportar('emergencias')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('emergencias')">🖨 Imprimir</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_emergencias"><thead><tr><th>Paciente</th><th>Hora</th><th>Motivo</th><th>Diagnóstico</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- ENFERMERÍA -->
+    <div class="vista" id="vista-enfermeria">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Cuidados</div><h2>Enfermería</h2></div>
+        <button class="btn btn-coral" onclick="abrirModalNotaEnfermeriaGeneral()">+ Nueva nota</button>
+      </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="abrirExportar('notasEnfermeria')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('enfermeria')">🖨 Imprimir</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-enfermeria"><thead><tr><th>Fecha</th><th>Paciente</th><th>Enfermero/a</th><th>Medicamento</th><th>Observaciones</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- HOSPITALIZACIÓN -->
+    <div class="vista" id="vista-hospitalizacion">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Internado</div><h2>Hospitalización</h2></div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-hospitalizacion" placeholder="Buscar paciente..." oninput="renderHospitalizaciones()">
+          <button class="btn btn-coral" onclick="abrirModalIngreso()">+ Nuevo ingreso</button>
+        </div>
+      </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="abrirExportar('hospitalizaciones')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('hospitalizaciones')">🖨 Imprimir</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_hospitalizaciones"><thead><tr><th>Paciente</th><th>Sala/Cama</th><th>Ingreso</th><th>Diagnóstico</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- IMÁGENES -->
+    <div class="vista" id="vista-imagenes">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Servicio ambulatorio</div><h2>Imágenes diagnósticas</h2></div>
+        <button class="btn btn-coral" onclick="abrirModalImagen()">+ Nueva orden</button>
+      </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="abrirExportar('imagenes')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('imagenes')">🖨 Imprimir</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_imagenes"><thead><tr><th>Paciente</th><th>Tipo</th><th>Estudio</th><th>Solicitado</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- LABORATORIO -->
+    <div class="vista" id="vista-laboratorio">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Servicio ambulatorio</div><h2>Laboratorio</h2></div>
+        <button class="btn btn-coral" onclick="abrirModalLaboratorio()">+ Nueva orden</button>
+      </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="abrirExportar('laboratorios')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('laboratorios')">🖨 Imprimir</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_laboratorios"><thead><tr><th>Paciente</th><th>Exámenes</th><th>Solicitado</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- CONSENTIMIENTOS -->
+    <div class="vista" id="vista-consentimientos">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Documentos legales</div><h2>Consentimientos informados</h2></div>
+        <button class="btn btn-coral" onclick="abrirModalConsentimiento()">+ Nuevo consentimiento</button>
+      </div>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="abrirExportar('consentimientos')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('consentimientos')">🖨 Imprimir</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_consentimientos"><thead><tr><th>Paciente</th><th>Procedimiento</th><th>Médico</th><th>Fecha</th><th></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
 
@@ -734,20 +845,21 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
    ============================================================ */
 
 let usuarioActual = null;
-let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[], salud_proveedores:[], salud_compras:[], salud_solicitudes:[] };
+let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[], salud_proveedores:[], salud_compras:[], salud_solicitudes:[], salud_hospitalizaciones:[], salud_imagenes:[], salud_laboratorios:[], salud_consentimientos:[], salud_emergencias:[], salud_notas_enfermeria:[] };
 
 const TABS_POR_ROL = {
-  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria','manual'],
-  doctor:       ['dashboard','salud_pacientes','salud_citas','salud_historiales','manual'],
+  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','imagenes','laboratorio','consentimientos','inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria','manual'],
+  doctor:       ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','consentimientos','manual'],
   farmaceutico: ['dashboard','inventario','proveedores','facturacion','reportes','manual'],
   cajero:       ['dashboard','facturacion','manual'],
-  enfermeria:   ['dashboard','salud_pacientes','salud_citas','salud_historiales','manual'],
-  laboratorio:  ['dashboard','salud_pacientes','salud_historiales','manual'],
-  admision:     ['dashboard','salud_pacientes','salud_citas','manual'],
+  enfermeria:   ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','manual'],
+  laboratorio:  ['dashboard','salud_pacientes','salud_historiales','imagenes','laboratorio','manual'],
+  admision:     ['dashboard','salud_pacientes','salud_citas','emergencias','hospitalizacion','manual'],
   seguros:      ['dashboard','facturacion','reportes','manual']
 };
 const NOMBRE_TAB = {
   dashboard:'Panel', salud_pacientes:'Pacientes', salud_citas:'Citas', salud_historiales:'Historiales',
+  emergencias:'Emergencias', hospitalizacion:'Hospitalización', enfermeria:'Enfermería', imagenes:'Imágenes', laboratorio:'Laboratorio', consentimientos:'Consentimientos',
   inventario:'Inventario', proveedores:'Proveedores', facturacion:'Facturación', reportes:'Reportes', salud_usuarios:'Usuarios',
   auditoria:'Auditoría', manual:'Manual'
 };
@@ -755,12 +867,24 @@ const MODULOS_PERMISO = [
   {clave:'salud_pacientes', etiqueta:'Pacientes'},
   {clave:'salud_citas', etiqueta:'Citas'},
   {clave:'salud_historiales', etiqueta:'Historiales clínicos'},
+  {clave:'emergencias', etiqueta:'Emergencias'},
+  {clave:'hospitalizacion', etiqueta:'Hospitalización'},
+  {clave:'enfermeria', etiqueta:'Enfermería'},
+  {clave:'imagenes', etiqueta:'Imágenes diagnósticas'},
+  {clave:'laboratorio', etiqueta:'Laboratorio'},
+  {clave:'consentimientos', etiqueta:'Consentimientos informados'},
   {clave:'inventario', etiqueta:'Inventario'},
   {clave:'proveedores', etiqueta:'Proveedores'},
   {clave:'facturacion', etiqueta:'Facturación'},
   {clave:'reportes', etiqueta:'Reportes'},
   {clave:'salud_usuarios', etiqueta:'Usuarios (administración)'},
   {clave:'auditoria', etiqueta:'Auditoría'},
+];
+const GRUPOS_MENU = [
+  {clave:'clinica', nombre:'Atención Clínica', tabs:['salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria']},
+  {clave:'servicios', nombre:'Servicios', tabs:['laboratorio','imagenes']},
+  {clave:'documentos', nombre:'Documentos', tabs:['consentimientos']},
+  {clave:'administracion', nombre:'Administración', tabs:['inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria']},
 ];
 
 /* ============================================================
@@ -836,6 +960,49 @@ const CONFIG_MODULOS = {
       {clave:'creado_en', etiqueta:'Fecha'}, {clave:'usuario_nombre', etiqueta:'Usuario'}, {clave:'usuario_rol', etiqueta:'Rol'},
       {clave:'accion', etiqueta:'Acción'}, {clave:'modulo', etiqueta:'Módulo'}, {clave:'detalle', etiqueta:'Detalle'},
     ]
+  },
+  hospitalizaciones: {
+    tablaSb:'salud_hospitalizaciones', cacheKey:'salud_hospitalizaciones', titulo:'Hospitalizaciones', renderFn:()=>renderHospitalizaciones(), soloExportar:true,
+    columnas:[
+      {clave:'paciente', etiqueta:'Paciente'}, {clave:'doctor', etiqueta:'Doctor que ingresa'}, {clave:'sala', etiqueta:'Sala'}, {clave:'cama', etiqueta:'Cama'},
+      {clave:'fecha_ingreso', etiqueta:'Fecha ingreso'}, {clave:'diagnostico_presuntivo', etiqueta:'Diagnóstico presuntivo'},
+      {clave:'estado', etiqueta:'Estado'}, {clave:'fecha_egreso', etiqueta:'Fecha egreso'}, {clave:'diagnostico_definitivo', etiqueta:'Diagnóstico definitivo'},
+    ]
+  },
+  imagenes: {
+    tablaSb:'salud_imagenes', cacheKey:'salud_imagenes', titulo:'Imágenes', renderFn:()=>renderImagenes(), soloExportar:true,
+    columnas:[
+      {clave:'paciente', etiqueta:'Paciente'}, {clave:'doctor', etiqueta:'Doctor solicita'}, {clave:'tipo_estudio', etiqueta:'Tipo'},
+      {clave:'estudio_especifico', etiqueta:'Estudio'}, {clave:'fecha_solicitud', etiqueta:'Fecha solicitud'}, {clave:'estado', etiqueta:'Estado'},
+    ]
+  },
+  laboratorios: {
+    tablaSb:'salud_laboratorios', cacheKey:'salud_laboratorios', titulo:'Laboratorio', renderFn:()=>renderLaboratorios(), soloExportar:true,
+    columnas:[
+      {clave:'paciente', etiqueta:'Paciente'}, {clave:'doctor', etiqueta:'Doctor solicita'}, {clave:'examenes_solicitados', etiqueta:'Exámenes'},
+      {clave:'fecha_solicitud', etiqueta:'Fecha solicitud'}, {clave:'estado', etiqueta:'Estado'},
+    ]
+  },
+  consentimientos: {
+    tablaSb:'salud_consentimientos', cacheKey:'salud_consentimientos', titulo:'Consentimientos', renderFn:()=>renderConsentimientos(), soloExportar:true,
+    columnas:[
+      {clave:'paciente', etiqueta:'Paciente'}, {clave:'medico', etiqueta:'Médico'}, {clave:'tipo_procedimiento', etiqueta:'Procedimiento'},
+      {clave:'nombre_firmante', etiqueta:'Firmante'}, {clave:'fecha', etiqueta:'Fecha'},
+    ]
+  },
+  emergencias: {
+    tablaSb:'salud_emergencias', cacheKey:'salud_emergencias', titulo:'Emergencias', renderFn:()=>renderEmergencias(), soloExportar:true,
+    columnas:[
+      {clave:'paciente', etiqueta:'Paciente'}, {clave:'fecha_atencion', etiqueta:'Fecha'}, {clave:'motivo_consulta', etiqueta:'Motivo'},
+      {clave:'diagnostico_presuntivo', etiqueta:'Diagnóstico'}, {clave:'desenlace', etiqueta:'Desenlace'}, {clave:'estado', etiqueta:'Estado'},
+    ]
+  },
+  notasEnfermeria: {
+    tablaSb:'salud_notas_enfermeria', cacheKey:'salud_notas_enfermeria', titulo:'Enfermería', renderFn:()=>renderEnfermeria(), soloExportar:true,
+    columnas:[
+      {clave:'fecha', etiqueta:'Fecha'}, {clave:'paciente', etiqueta:'Paciente'}, {clave:'enfermero', etiqueta:'Enfermero/a'},
+      {clave:'medicamento_administrado', etiqueta:'Medicamento'}, {clave:'observaciones', etiqueta:'Observaciones'},
+    ]
   }
 };
 let seleccionados = { pacientes:new Set(), citas:new Set(), historiales:new Set(), productos:new Set(), facturas:new Set(), usuarios:new Set(), proveedores:new Set() };
@@ -908,15 +1075,44 @@ function tabsDelUsuario(){
 function construirTabs(){
   const tabs = tabsDelUsuario();
   const nav = document.getElementById('tabs-nav');
-  nav.innerHTML = tabs.map((t,i)=>
-    `<button class="tab-btn ${i===0?'activa':''}" data-tab="${t}" onclick="cambiarTab('${t}')">${NOMBRE_TAB[t]}</button>`
-  ).join('');
+  let html = '';
+
+  if(tabs.includes('dashboard')) html += `<button class="tab-btn activa" data-tab="dashboard" onclick="cambiarTab('dashboard')">${NOMBRE_TAB.dashboard}</button>`;
+
+  GRUPOS_MENU.forEach(grupo=>{
+    const disponibles = grupo.tabs.filter(t=>tabs.includes(t));
+    if(!disponibles.length) return;
+    html += `
+      <div class="menu-grupo">
+        <button class="tab-btn grupo-btn" onclick="toggleGrupoMenu('${grupo.clave}')">${grupo.nombre} ▾</button>
+        <div class="submenu" id="submenu-${grupo.clave}">
+          ${disponibles.map(t=>`<button class="submenu-item" data-tab="${t}" onclick="cambiarTab('${t}'); cerrarSubmenus();">${NOMBRE_TAB[t]}</button>`).join('')}
+        </div>
+      </div>`;
+  });
+
+  if(tabs.includes('manual')) html += `<button class="tab-btn" data-tab="manual" onclick="cambiarTab('manual')">${NOMBRE_TAB.manual}</button>`;
+
+  nav.innerHTML = html;
   document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
-  document.getElementById('vista-'+tabs[0]).classList.add('activa');
+  document.getElementById('vista-'+tabs[0])?.classList.add('activa');
 }
 
+function toggleGrupoMenu(clave){
+  const el = document.getElementById('submenu-'+clave);
+  const yaAbierto = el.classList.contains('abierto');
+  cerrarSubmenus();
+  if(!yaAbierto) el.classList.add('abierto');
+}
+function cerrarSubmenus(){
+  document.querySelectorAll('.submenu').forEach(s=>s.classList.remove('abierto'));
+}
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.menu-grupo')) cerrarSubmenus();
+});
+
 function cambiarTab(tab){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('activa', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-btn, .submenu-item').forEach(b=>b.classList.toggle('activa', b.dataset.tab===tab));
   document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
   document.getElementById('vista-'+tab).classList.add('activa');
 }
@@ -932,7 +1128,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
 /* ---------------- CARGA DE DATOS ---------------- */
 async function cargarTodo(){
-  const [p, c, h, pr, f, u, prov, comp, sol] = await Promise.all([
+  const [p, c, h, pr, f, u, prov, comp, sol, hosp, img, lab, cons, emer, enf] = await Promise.all([
     sb.from('salud_pacientes').select('*').order('nombre'),
     sb.from('salud_citas').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}),
     sb.from('salud_historiales').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}),
@@ -941,7 +1137,13 @@ async function cargarTodo(){
     sb.from('salud_usuarios').select('*').order('nombre'),
     sb.from('salud_proveedores').select('*').order('nombre'),
     sb.from('salud_compras').select('*, salud_productos(nombre), salud_proveedores(nombre)').order('creado_en', {ascending:false}).limit(300),
-    sb.from('salud_solicitudes').select('*, salud_pacientes(nombre), salud_usuarios(nombre), salud_productos(nombre, precio_venta, stock)').eq('estado','pendiente').order('creado_en', {ascending:false})
+    sb.from('salud_solicitudes').select('*, salud_pacientes(nombre), salud_usuarios(nombre), salud_productos(nombre, precio_venta, stock)').eq('estado','pendiente').order('creado_en', {ascending:false}),
+    sb.from('salud_hospitalizaciones').select('*, salud_pacientes(nombre), doctor:salud_usuarios!doctor_id(nombre), medico_egreso:salud_usuarios!medico_egreso_id(nombre)').order('fecha_ingreso', {ascending:false}).limit(300),
+    sb.from('salud_imagenes').select('*, salud_pacientes(nombre), doctor:salud_usuarios!doctor_solicita_id(nombre), tecnico:salud_usuarios!tecnico_id(nombre)').order('fecha_solicitud', {ascending:false}).limit(300),
+    sb.from('salud_laboratorios').select('*, salud_pacientes(nombre), doctor:salud_usuarios!doctor_solicita_id(nombre), tecnico:salud_usuarios!tecnico_id(nombre)').order('fecha_solicitud', {ascending:false}).limit(300),
+    sb.from('salud_consentimientos').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}).limit(300),
+    sb.from('salud_emergencias').select('*, salud_pacientes(nombre)').order('fecha_atencion', {ascending:false}).limit(300),
+    sb.from('salud_notas_enfermeria').select('*, salud_usuarios(nombre), salud_hospitalizaciones(sala, cama, salud_pacientes(nombre))').order('fecha', {ascending:false}).limit(300)
   ]);
   cache.salud_pacientes = p.data || [];
   cache.salud_citas = c.data || [];
@@ -952,6 +1154,12 @@ async function cargarTodo(){
   cache.salud_proveedores = prov.data || [];
   cache.salud_compras = comp.data || [];
   cache.salud_solicitudes = sol.data || [];
+  cache.salud_hospitalizaciones = hosp.data || [];
+  cache.salud_imagenes = img.data || [];
+  cache.salud_laboratorios = lab.data || [];
+  cache.salud_consentimientos = cons.data || [];
+  cache.salud_emergencias = emer.data || [];
+  cache.salud_notas_enfermeria = enf.data || [];
 
   if(usuarioActual && tabsDelUsuario().includes('auditoria')){
     const { data } = await sb.from('salud_auditoria').select('*').order('creado_en', {ascending:false}).limit(500);
@@ -966,6 +1174,12 @@ async function cargarTodo(){
   renderProveedores();
   renderCompras();
   renderFacturas();
+  renderHospitalizaciones();
+  renderImagenes();
+  renderLaboratorios();
+  renderConsentimientos();
+  renderEmergencias();
+  renderEnfermeria();
   renderReportes();
   renderUsuarios();
   renderAuditoria();
@@ -1000,7 +1214,7 @@ function renderDashboard(){
 
 function pillEstado(estado){
   const map = {pendiente:'pill-ambar', atendida:'pill-verde', cancelada:'pill-coral', no_asistio:'pill-gris',
-               completada:'pill-verde', anulada:'pill-coral'};
+               completada:'pill-verde', anulada:'pill-coral', realizado:'pill-verde', facturado:'pill-verde', activo:'pill-ambar', egresado:'pill-verde'};
   return `<span class="pill ${map[estado]||'pill-gris'}">${estado.replace('_',' ')}</span>`;
 }
 function formatoHora(iso){ if(!iso) return '—'; const d=new Date(iso); return d.toLocaleString('es-DO',{dateStyle:'short',timeStyle:'short'}); }
@@ -1459,10 +1673,12 @@ function abrirModalCompra(){
   abrirModal(`
     <h3>Registrar compra</h3>
     <div class="campo"><label>Producto</label>
-      <select id="cpf-producto">${cache.salud_productos.map(p=>`<option value="${p.id}">${p.nombre} (stock actual: ${p.stock})</option>`).join('')}</select>
+      <input id="cpf-producto-nombre" list="dl-productos-compra" placeholder="Escribe para buscar o elige de la lista...">
+      <datalist id="dl-productos-compra">${cache.salud_productos.map(p=>`<option value="${p.nombre}">Stock actual: ${p.stock}</option>`).join('')}</datalist>
     </div>
     <div class="campo"><label>Proveedor</label>
-      <select id="cpf-proveedor"><option value="">— Sin especificar —</option>${cache.salud_proveedores.map(pv=>`<option value="${pv.id}">${pv.nombre}</option>`).join('')}</select>
+      <input id="cpf-proveedor-nombre" list="dl-proveedores-compra" placeholder="Escribe para buscar o deja en blanco...">
+      <datalist id="dl-proveedores-compra">${cache.salud_proveedores.map(pv=>`<option value="${pv.nombre}">`).join('')}</datalist>
     </div>
     <div class="grid-2">
       <div class="campo"><label>Cantidad comprada</label><input type="number" id="cpf-cantidad" value="1" min="1"></div>
@@ -1471,7 +1687,7 @@ function abrirModalCompra(){
       <div class="campo"><label>Vencimiento de este lote</label><input type="date" id="cpf-vencimiento"></div>
     </div>
     <div class="campo"><label>Notas</label><input id="cpf-notas" placeholder="Opcional"></div>
-    <p style="font-size:11.5px; color:var(--gris);">Al guardar, la cantidad se suma al stock del producto, y el costo/lote/vencimiento de este producto se actualizan con los de esta compra más reciente.</p>
+    <p style="font-size:11.5px; color:var(--gris);">Al guardar, la cantidad se suma al stock del producto, y el costo/lote/vencimiento de este producto se actualizan con los de esta compra más reciente. El producto debe existir ya en Inventario — si es nuevo, créalo primero ahí.</p>
     <div class="modal-acciones">
       <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
       <button class="btn btn-primario" style="width:auto;" onclick="guardarCompra()">Guardar compra</button>
@@ -1480,22 +1696,27 @@ function abrirModalCompra(){
 }
 
 async function guardarCompra(){
-  const producto_id = document.getElementById('cpf-producto').value;
-  const proveedor_id = document.getElementById('cpf-proveedor').value || null;
+  const nombreProducto = document.getElementById('cpf-producto-nombre').value.trim();
+  const nombreProveedor = document.getElementById('cpf-proveedor-nombre').value.trim();
+  const producto = cache.salud_productos.find(p=>p.nombre.toLowerCase()===nombreProducto.toLowerCase());
+  const proveedor = nombreProveedor ? cache.salud_proveedores.find(pv=>pv.nombre.toLowerCase()===nombreProveedor.toLowerCase()) : null;
+  const producto_id = producto?.id;
+  const proveedor_id = proveedor?.id || null;
   const cantidad = Number(document.getElementById('cpf-cantidad').value)||0;
   const costo_unitario = Number(document.getElementById('cpf-costo').value)||0;
   const lote = document.getElementById('cpf-lote').value.trim();
   const fecha_vencimiento = document.getElementById('cpf-vencimiento').value || null;
   const notas = document.getElementById('cpf-notas').value.trim();
 
-  if(!producto_id || cantidad<=0){ mostrarToast('Selecciona un producto y una cantidad válida.'); return; }
+  if(!producto_id){ mostrarToast('Ese producto no existe en Inventario. Créalo primero ahí o elígelo de la lista.'); return; }
+  if(nombreProveedor && !proveedor_id){ mostrarToast('Ese proveedor no existe. Créalo primero en Proveedores o elígelo de la lista.'); return; }
+  if(cantidad<=0){ mostrarToast('Ingresa una cantidad válida.'); return; }
 
   const { error: errCompra } = await sb.from('salud_compras').insert({
     producto_id, proveedor_id, cantidad, costo_unitario, lote, fecha_vencimiento, notas, usuario_id: usuarioActual.id
   });
   if(errCompra){ mostrarToast('Error: '+errCompra.message); return; }
 
-  const producto = cache.salud_productos.find(p=>p.id===producto_id);
   if(producto){
     const actualizacion = { stock: producto.stock + cantidad, precio_compra: costo_unitario };
     if(lote) actualizacion.lote = lote;
@@ -1506,6 +1727,651 @@ async function guardarCompra(){
 
   registrarAuditoria('crear', 'compras', null, `${cantidad} × ${producto?.nombre||''} — costo ${formatoMoneda(costo_unitario)}`);
   cerrarModal(); mostrarToast('Compra registrada y stock actualizado.'); cargarTodo();
+}
+
+/* ================= HOSPITALIZACIÓN ================= */
+const ESTUDIOS_IMAGEN_COMUNES = ['Sonografía abdominal','Sonografía pélvica','Sonografía obstétrica','Sonografía de tiroides','Sonografía de partes blandas','Radiografía de tórax','Radiografía de abdomen','Radiografía de extremidades','Radiografía de columna','Tomografía de cráneo','Tomografía de tórax','Tomografía de abdomen y pelvis','Tomografía de columna','Resonancia magnética cerebral','Resonancia magnética de columna'];
+const EXAMENES_LAB_COMUNES = ['Hemograma completo','Glicemia en ayunas','Perfil renal (BUN, creatinina)','Perfil hepático','Perfil lipídico','Electrolitos séricos','Examen de orina','Coproanálisis','Tiempo de protrombina (TP/INR)','PCR (proteína C reactiva)','VSG','Prueba de embarazo','Hemoglobina glicosilada (HbA1c)','TSH','Urocultivo','Hemocultivo','Prueba de VIH','Prueba de dengue','Prueba de COVID-19','Grupo sanguíneo y Rh'];
+const PROCEDIMIENTOS_CONSENTIMIENTO = ['Ingreso hospitalario','Cirugía mayor','Anestesia general','Salpingoclasia','Vasectomía','Trasplante','Investigación clínica en seres humanos','Necropsia hospitalaria','Transfusión sanguínea','Procedimiento de alto riesgo','Procedimiento de reproducción asistida','Otro procedimiento invasivo'];
+
+function renderHospitalizaciones(){
+  const filtro = (document.getElementById('buscar-hospitalizacion')?.value||'').toLowerCase();
+  const lista = (cache.salud_hospitalizaciones||[]).filter(h => (h.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
+  const tb = document.querySelector('#tabla-salud_hospitalizaciones tbody');
+  if(!tb) return;
+  tb.innerHTML = lista.length ? lista.map(h=>`
+    <tr>
+      <td><strong>${h.salud_pacientes?.nombre||'—'}</strong></td>
+      <td>${h.sala||'—'} / ${h.cama||'—'}</td>
+      <td>${formatoHora(h.fecha_ingreso)}</td>
+      <td>${h.diagnostico_presuntivo||'—'}</td>
+      <td>${h.estado==='activo'?'<span class="pill pill-ambar">Activo</span>':h.estado==='egresado'?'<span class="pill pill-verde">Egresado</span>':'<span class="pill pill-gris">Fallecido</span>'}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verHospitalizacion('${h.id}')">Ver expediente</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="6" class="vacio">Sin hospitalizaciones registradas.</td></tr>`;
+}
+
+function abrirModalIngreso(){
+  abrirModal(`
+    <h3>Nuevo ingreso hospitalario</h3>
+    <div class="campo"><label>Paciente</label>
+      <select id="hif-paciente">${cache.salud_pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('')}</select>
+    </div>
+    <div class="grid-2">
+      <div class="campo"><label>Sala</label><input id="hif-sala"></div>
+      <div class="campo"><label>Cama</label><input id="hif-cama"></div>
+    </div>
+    <div class="campo"><label>Motivo de ingreso</label><textarea id="hif-motivo" rows="2"></textarea></div>
+    <div class="campo"><label>Historia de la enfermedad actual</label><textarea id="hif-historia" rows="2"></textarea></div>
+    <div class="campo"><label>Anamnesis (antecedentes personales, familiares, quirúrgicos)</label><textarea id="hif-anamnesis" rows="2"></textarea></div>
+    <div class="campo"><label>Examen físico</label><textarea id="hif-examen" rows="2"></textarea></div>
+    <div class="grid-2">
+      <div class="campo"><label>Presión arterial</label><input id="hif-presion" placeholder="120/80"></div>
+      <div class="campo"><label>Frec. cardíaca</label><input id="hif-fc"></div>
+      <div class="campo"><label>Frec. respiratoria</label><input id="hif-fr"></div>
+      <div class="campo"><label>Temperatura</label><input id="hif-temp"></div>
+      <div class="campo"><label>SpO2</label><input id="hif-spo2"></div>
+      <div class="campo"><label>Peso / Talla</label><input id="hif-peso-talla" placeholder="70kg / 170cm"></div>
+    </div>
+    <div class="campo"><label>Diagnóstico presuntivo</label><textarea id="hif-diagnostico" rows="2"></textarea></div>
+    <div class="grid-2">
+      <div class="campo"><label>Dieta</label><input id="hif-dieta"></div>
+      <div class="campo"><label>Plan de ingreso</label><input id="hif-plan"></div>
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarIngreso()">Registrar ingreso</button>
+    </div>
+  `);
+}
+
+async function guardarIngreso(){
+  const paciente_id = document.getElementById('hif-paciente').value;
+  if(!paciente_id){ mostrarToast('Selecciona un paciente.'); return; }
+  const numero_expediente = `HOSP-${new Date().getFullYear()}-${String((cache.salud_hospitalizaciones||[]).length+1).padStart(5,'0')}`;
+  const registro = {
+    numero_expediente, paciente_id, doctor_id: usuarioActual.id,
+    sala: document.getElementById('hif-sala').value.trim(), cama: document.getElementById('hif-cama').value.trim(),
+    motivo_ingreso: document.getElementById('hif-motivo').value.trim(),
+    historia_enfermedad_actual: document.getElementById('hif-historia').value.trim(),
+    anamnesis: document.getElementById('hif-anamnesis').value.trim(),
+    examen_fisico: document.getElementById('hif-examen').value.trim(),
+    signos_vitales_ingreso: {
+      presion: document.getElementById('hif-presion').value.trim(), fc: document.getElementById('hif-fc').value.trim(),
+      fr: document.getElementById('hif-fr').value.trim(), temperatura: document.getElementById('hif-temp').value.trim(),
+      spo2: document.getElementById('hif-spo2').value.trim(), peso_talla: document.getElementById('hif-peso-talla').value.trim(),
+    },
+    diagnostico_presuntivo: document.getElementById('hif-diagnostico').value.trim(),
+    dieta: document.getElementById('hif-dieta').value.trim(), plan_ingreso: document.getElementById('hif-plan').value.trim(),
+  };
+  const { error } = await sb.from('salud_hospitalizaciones').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'hospitalizacion', null, `Ingreso ${numero_expediente}`);
+  cerrarModal(); mostrarToast('Ingreso registrado.'); cargarTodo();
+}
+
+async function verHospitalizacion(id){
+  const h = cache.salud_hospitalizaciones.find(x=>x.id===id);
+  if(!h) return;
+  const [{data:evoluciones}, {data:ordenes}, {data:enfermeria}] = await Promise.all([
+    sb.from('salud_notas_evolucion').select('*, salud_usuarios(nombre)').eq('hospitalizacion_id', id).order('fecha', {ascending:false}),
+    sb.from('salud_ordenes_medicas').select('*, salud_usuarios(nombre)').eq('hospitalizacion_id', id).order('fecha', {ascending:false}),
+    sb.from('salud_notas_enfermeria').select('*, salud_usuarios(nombre)').eq('hospitalizacion_id', id).order('fecha', {ascending:false}),
+  ]);
+  abrirModal(`
+    <h3>Expediente — ${h.salud_pacientes?.nombre||''}</h3>
+    <p style="font-size:11.5px; color:var(--gris); margin-bottom:14px;">${h.numero_expediente} · Sala ${h.sala||'—'} / Cama ${h.cama||'—'} · Ingreso: ${formatoHora(h.fecha_ingreso)} · ${h.estado==='activo'?'<span class="pill pill-ambar">Activo</span>':'<span class="pill pill-verde">Egresado</span>'}</p>
+    <div class="detalle-fila"><span class="etiqueta-d">Motivo</span><span class="valor-d">${h.motivo_ingreso||'—'}</span></div>
+    <div class="detalle-fila"><span class="etiqueta-d">Diagnóstico presuntivo</span><span class="valor-d">${h.diagnostico_presuntivo||'—'}</span></div>
+    ${h.estado!=='activo' ? `<div class="detalle-fila"><span class="etiqueta-d">Diagnóstico definitivo</span><span class="valor-d">${h.diagnostico_definitivo||'—'}</span></div>` : ''}
+
+    <hr style="border:none; border-top:1px solid var(--linea); margin:16px 0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <strong style="font-size:13px;">Notas de evolución</strong>
+      <button class="btn btn-fantasma" style="padding:5px 9px; font-size:11.5px;" onclick="abrirModalNotaEvolucion('${id}')">+ Agregar</button>
+    </div>
+    ${(evoluciones||[]).map(e=>`<div class="detalle-fila"><span class="etiqueta-d">${formatoHora(e.fecha)} — ${e.salud_usuarios?.nombre||''}</span><span class="valor-d">${e.resumen_estado||'—'}</span></div>`).join('') || '<p style="font-size:12px; color:var(--gris);">Sin notas aún.</p>'}
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:16px 0 8px;">
+      <strong style="font-size:13px;">Órdenes médicas</strong>
+      <button class="btn btn-fantasma" style="padding:5px 9px; font-size:11.5px;" onclick="abrirModalOrdenMedica('${id}')">+ Agregar</button>
+    </div>
+    ${(ordenes||[]).map(o=>`<div class="detalle-fila"><span class="etiqueta-d">${formatoHora(o.fecha)} — ${o.salud_usuarios?.nombre||''}</span><span class="valor-d">${o.tratamiento||'—'}</span></div>`).join('') || '<p style="font-size:12px; color:var(--gris);">Sin órdenes aún.</p>'}
+
+    <div style="margin:16px 0 8px;"><strong style="font-size:13px;">Notas de enfermería</strong></div>
+    ${(enfermeria||[]).map(n=>`<div class="detalle-fila"><span class="etiqueta-d">${formatoHora(n.fecha)} — ${n.salud_usuarios?.nombre||''}</span><span class="valor-d">${n.observaciones||'—'}</span></div>`).join('') || '<p style="font-size:12px; color:var(--gris);">Sin notas aún.</p>'}
+
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button>
+      ${h.estado==='activo' ? `<button class="btn btn-coral" onclick="abrirModalEgreso('${id}')">Dar de alta (egreso)</button>` : ''}
+    </div>
+  `);
+}
+
+function abrirModalNotaEvolucion(hospId){
+  abrirModal(`
+    <h3>Nueva nota de evolución</h3>
+    <div class="grid-2">
+      <div class="campo"><label>Presión</label><input id="nef-presion"></div>
+      <div class="campo"><label>FC / FR</label><input id="nef-fc-fr"></div>
+    </div>
+    <div class="campo"><label>Diagnóstico actual</label><input id="nef-diagnostico"></div>
+    <div class="campo"><label>Resumen del estado</label><textarea id="nef-resumen" rows="2"></textarea></div>
+    <div class="campo"><label>Nota de transfusión (si aplica)</label><input id="nef-transfusion"></div>
+    <div class="campo"><label>Plan de manejo</label><textarea id="nef-plan" rows="2"></textarea></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="verHospitalizacion('${hospId}')">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarNotaEvolucion('${hospId}')">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarNotaEvolucion(hospId){
+  const registro = {
+    hospitalizacion_id: hospId, doctor_id: usuarioActual.id,
+    diagnostico: document.getElementById('nef-diagnostico').value.trim(),
+    signos_vitales: { presion: document.getElementById('nef-presion').value.trim(), fc_fr: document.getElementById('nef-fc-fr').value.trim() },
+    resumen_estado: document.getElementById('nef-resumen').value.trim(),
+    nota_transfusion: document.getElementById('nef-transfusion').value.trim(),
+    plan_manejo: document.getElementById('nef-plan').value.trim(),
+  };
+  const { error } = await sb.from('salud_notas_evolucion').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'hospitalizacion', hospId, 'Nota de evolución');
+  mostrarToast('Nota agregada.'); verHospitalizacion(hospId);
+}
+
+function abrirModalOrdenMedica(hospId){
+  abrirModal(`
+    <h3>Nueva orden médica</h3>
+    <div class="campo"><label>Tratamiento (medicamentos y recomendaciones)</label><textarea id="omf-tratamiento" rows="2"></textarea></div>
+    <div class="campo"><label>Dieta</label><input id="omf-dieta"></div>
+    <div class="campo"><label>Estudios indicados</label><textarea id="omf-estudios" rows="2"></textarea></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="verHospitalizacion('${hospId}')">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarOrdenMedica('${hospId}')">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarOrdenMedica(hospId){
+  const registro = {
+    hospitalizacion_id: hospId, doctor_id: usuarioActual.id,
+    tratamiento: document.getElementById('omf-tratamiento').value.trim(),
+    dieta: document.getElementById('omf-dieta').value.trim(),
+    estudios_indicados: document.getElementById('omf-estudios').value.trim(),
+  };
+  const { error } = await sb.from('salud_ordenes_medicas').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'hospitalizacion', hospId, 'Orden médica');
+  mostrarToast('Orden agregada.'); verHospitalizacion(hospId);
+}
+
+function abrirModalEgreso(hospId){
+  abrirModal(`
+    <h3>Egreso / Epicrisis</h3>
+    <div class="campo"><label>Diagnóstico definitivo</label><textarea id="egf-diagnostico" rows="2"></textarea></div>
+    <div class="campo"><label>Resumen de manejo durante el internamiento</label><textarea id="egf-resumen" rows="3"></textarea></div>
+    <div class="campo"><label>Recomendaciones para manejo/tratamiento ambulatorio</label><textarea id="egf-recomendaciones" rows="2"></textarea></div>
+    <div class="grid-2">
+      <div class="campo"><label>Condición de egreso</label><input id="egf-condicion" placeholder="Estable, mejorado, etc."></div>
+      <div class="campo"><label>Fecha de seguimiento</label><input type="date" id="egf-seguimiento"></div>
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="verHospitalizacion('${hospId}')">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarEgreso('${hospId}')">Confirmar egreso</button>
+    </div>
+  `);
+}
+
+async function guardarEgreso(hospId){
+  const registro = {
+    estado:'egresado', fecha_egreso: new Date().toISOString(), medico_egreso_id: usuarioActual.id,
+    diagnostico_definitivo: document.getElementById('egf-diagnostico').value.trim(),
+    resumen_manejo: document.getElementById('egf-resumen').value.trim(),
+    recomendaciones_egreso: document.getElementById('egf-recomendaciones').value.trim(),
+    condicion_egreso: document.getElementById('egf-condicion').value.trim(),
+    fecha_seguimiento: document.getElementById('egf-seguimiento').value || null,
+  };
+  const { error } = await sb.from('salud_hospitalizaciones').update(registro).eq('id', hospId);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('editar', 'hospitalizacion', hospId, 'Egreso/Epicrisis');
+  cerrarModal(); mostrarToast('Paciente egresado.'); cargarTodo();
+}
+
+/* ================= EMERGENCIAS ================= */
+function renderEmergencias(){
+  const filtro = (document.getElementById('buscar-emergencia')?.value||'').toLowerCase();
+  const lista = (cache.salud_emergencias||[]).filter(e => (e.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
+  const tb = document.querySelector('#tabla-salud_emergencias tbody');
+  if(!tb) return;
+  tb.innerHTML = lista.length ? lista.map(e=>`
+    <tr>
+      <td><strong>${e.salud_pacientes?.nombre||'—'}</strong></td>
+      <td>${formatoHora(e.fecha_atencion)}</td>
+      <td>${e.motivo_consulta||'—'}</td>
+      <td>${e.diagnostico_presuntivo||'—'}</td>
+      <td>${e.estado==='en_atencion'?'<span class="pill pill-ambar">En atención</span>':'<span class="pill pill-verde">Cerrado</span>'}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verEmergencia('${e.id}')">Ver</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="6" class="vacio">Sin atenciones de emergencia registradas.</td></tr>`;
+}
+
+function abrirModalEmergencia(){
+  abrirModal(`
+    <h3>Nueva atención de emergencia</h3>
+    <div class="campo"><label>Paciente</label>
+      <select id="emf-paciente">${cache.salud_pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('')}</select>
+    </div>
+    <div class="grid-2">
+      <div class="campo"><label>Presión</label><input id="emf-presion" placeholder="120/80"></div>
+      <div class="campo"><label>Frec. cardíaca</label><input id="emf-fc"></div>
+      <div class="campo"><label>Frec. respiratoria</label><input id="emf-fr"></div>
+      <div class="campo"><label>Temperatura</label><input id="emf-temp"></div>
+      <div class="campo"><label>SpO2</label><input id="emf-spo2"></div>
+    </div>
+    <div class="campo"><label>Motivo de la consulta</label><textarea id="emf-motivo" rows="2"></textarea></div>
+    <div class="campo"><label>Interrogatorio, exploración física, estado mental/emocional</label><textarea id="emf-interrogatorio" rows="2"></textarea></div>
+    <div class="campo"><label>Diagnóstico presuntivo</label><textarea id="emf-diagnostico" rows="2"></textarea></div>
+    <div class="campo"><label>Tratamiento</label><textarea id="emf-tratamiento" rows="2"></textarea></div>
+    <div class="campo"><label>Pronóstico</label><input id="emf-pronostico"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarEmergencia()">Registrar</button>
+    </div>
+  `);
+}
+
+async function guardarEmergencia(){
+  const paciente_id = document.getElementById('emf-paciente').value;
+  const numero_expediente = `EMER-${new Date().getFullYear()}-${String((cache.salud_emergencias||[]).length+1).padStart(5,'0')}`;
+  const registro = {
+    numero_expediente, paciente_id, doctor_id: usuarioActual.id,
+    signos_vitales: { presion: document.getElementById('emf-presion').value.trim(), fc: document.getElementById('emf-fc').value.trim(), fr: document.getElementById('emf-fr').value.trim(), temperatura: document.getElementById('emf-temp').value.trim(), spo2: document.getElementById('emf-spo2').value.trim() },
+    motivo_consulta: document.getElementById('emf-motivo').value.trim(),
+    resumen_interrogatorio: document.getElementById('emf-interrogatorio').value.trim(),
+    diagnostico_presuntivo: document.getElementById('emf-diagnostico').value.trim(),
+    tratamiento: document.getElementById('emf-tratamiento').value.trim(),
+    pronostico: document.getElementById('emf-pronostico').value.trim(),
+  };
+  const { error } = await sb.from('salud_emergencias').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'emergencias', null, `Atención ${numero_expediente}`);
+  cerrarModal(); mostrarToast('Atención registrada.'); cargarTodo();
+}
+
+async function verEmergencia(id){
+  const e = cache.salud_emergencias.find(x=>x.id===id);
+  if(!e) return;
+  const { data: evoluciones } = await sb.from('salud_emergencias_evolucion').select('*, salud_usuarios(nombre)').eq('emergencia_id', id).order('fecha', {ascending:false});
+  abrirModal(`
+    <h3>Emergencia — ${e.salud_pacientes?.nombre||''}</h3>
+    <p style="font-size:11.5px; color:var(--gris); margin-bottom:14px;">${e.numero_expediente} · ${formatoHora(e.fecha_atencion)} · ${e.estado==='en_atencion'?'<span class="pill pill-ambar">En atención</span>':'<span class="pill pill-verde">Cerrado</span>'}</p>
+    <div class="detalle-fila"><span class="etiqueta-d">Motivo</span><span class="valor-d">${e.motivo_consulta||'—'}</span></div>
+    <div class="detalle-fila"><span class="etiqueta-d">Diagnóstico presuntivo</span><span class="valor-d">${e.diagnostico_presuntivo||'—'}</span></div>
+    <div class="detalle-fila"><span class="etiqueta-d">Tratamiento</span><span class="valor-d">${e.tratamiento||'—'}</span></div>
+    ${e.desenlace ? `<div class="detalle-fila"><span class="etiqueta-d">Desenlace</span><span class="valor-d">${e.desenlace.replace('_',' ')}</span></div>` : ''}
+
+    <hr style="border:none; border-top:1px solid var(--linea); margin:16px 0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <strong style="font-size:13px;">Notas de evolución</strong>
+      ${e.estado==='en_atencion' ? `<button class="btn btn-fantasma" style="padding:5px 9px; font-size:11.5px;" onclick="abrirModalEvolEmergencia('${id}')">+ Agregar</button>` : ''}
+    </div>
+    ${(evoluciones||[]).map(v=>`<div class="detalle-fila"><span class="etiqueta-d">${formatoHora(v.fecha)} — ${v.salud_usuarios?.nombre||''}</span><span class="valor-d">${v.evolucion_cuadro||'—'}</span></div>`).join('') || '<p style="font-size:12px; color:var(--gris);">Sin notas aún.</p>'}
+
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button>
+      ${e.estado==='en_atencion' ? `<button class="btn btn-coral" onclick="abrirModalDesenlace('${id}')">Definir desenlace</button>` : ''}
+    </div>
+  `);
+}
+
+function abrirModalEvolEmergencia(emergId){
+  abrirModal(`
+    <h3>Nueva nota de evolución</h3>
+    <div class="campo"><label>Evolución del cuadro</label><textarea id="eef-evolucion" rows="2"></textarea></div>
+    <div class="campo"><label>Diagnósticos</label><input id="eef-diagnosticos"></div>
+    <div class="campo"><label>Plan de atención (ambulatorio u hospitalización)</label><input id="eef-plan"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="verEmergencia('${emergId}')">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarEvolEmergencia('${emergId}')">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarEvolEmergencia(emergId){
+  const registro = {
+    emergencia_id: emergId, doctor_id: usuarioActual.id,
+    evolucion_cuadro: document.getElementById('eef-evolucion').value.trim(),
+    diagnosticos: document.getElementById('eef-diagnosticos').value.trim(),
+    plan_atencion: document.getElementById('eef-plan').value.trim(),
+  };
+  const { error } = await sb.from('salud_emergencias_evolucion').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'emergencias', emergId, 'Nota de evolución');
+  mostrarToast('Nota agregada.'); verEmergencia(emergId);
+}
+
+function abrirModalDesenlace(emergId){
+  abrirModal(`
+    <h3>Definir desenlace</h3>
+    <div class="campo"><label>Desenlace</label>
+      <select id="desf-desenlace">
+        <option value="alta">Alta</option><option value="en_observacion">En observación</option>
+        <option value="hospitalizado">Hospitalizado</option><option value="trasladado">Trasladado</option><option value="fallecido">Fallecido</option>
+      </select>
+    </div>
+    <div class="campo"><label>Establecimiento de traslado (si aplica)</label><input id="desf-establecimiento"></div>
+    <div class="campo"><label>Motivo del traslado (si aplica)</label><input id="desf-motivo-traslado"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="verEmergencia('${emergId}')">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarDesenlace('${emergId}')">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarDesenlace(emergId){
+  const desenlace = document.getElementById('desf-desenlace').value;
+  const registro = {
+    desenlace, estado: desenlace==='en_observacion' ? 'en_atencion' : 'cerrado',
+    establecimiento_traslado: document.getElementById('desf-establecimiento').value.trim(),
+    motivo_traslado: document.getElementById('desf-motivo-traslado').value.trim(),
+  };
+  const { error } = await sb.from('salud_emergencias').update(registro).eq('id', emergId);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('editar', 'emergencias', emergId, `Desenlace: ${desenlace}`);
+  cerrarModal();
+  if(desenlace==='hospitalizado') mostrarToast('Desenlace guardado. Ve a Hospitalización para registrar el ingreso.');
+  else mostrarToast('Desenlace guardado.');
+  cargarTodo();
+}
+
+/* ================= ENFERMERÍA ================= */
+function renderEnfermeria(){
+  const tb = document.querySelector('#tabla-enfermeria tbody');
+  if(!tb) return;
+  const lista = cache.salud_notas_enfermeria||[];
+  tb.innerHTML = lista.length ? lista.map(n=>`
+    <tr>
+      <td>${formatoHora(n.fecha)}</td>
+      <td>${n.salud_hospitalizaciones?.salud_pacientes?.nombre||'—'}</td>
+      <td>${n.salud_usuarios?.nombre||'—'}</td>
+      <td>${n.medicamento_administrado||'—'}</td>
+      <td>${n.observaciones||'—'}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="5" class="vacio">Sin notas de enfermería aún.</td></tr>`;
+}
+
+function abrirModalNotaEnfermeriaGeneral(){
+  const activas = (cache.salud_hospitalizaciones||[]).filter(h=>h.estado==='activo');
+  if(!activas.length){ mostrarToast('No hay pacientes hospitalizados activos.'); return; }
+  abrirModal(`
+    <h3>Nueva nota de enfermería</h3>
+    <div class="campo"><label>Paciente internado</label>
+      <select id="nge-hospitalizacion">${activas.map(h=>`<option value="${h.id}">${h.salud_pacientes?.nombre||''} — Sala ${h.sala||'—'}/Cama ${h.cama||'—'}</option>`).join('')}</select>
+    </div>
+    <div class="grid-2">
+      <div class="campo"><label>Presión</label><input id="nge-presion"></div>
+      <div class="campo"><label>FC / FR</label><input id="nge-fc-fr"></div>
+    </div>
+    <div class="grid-2">
+      <div class="campo"><label>Medicamento administrado</label><input id="nge-medicamento"></div>
+      <div class="campo"><label>Dosis / Vía</label><input id="nge-dosis-via"></div>
+      <div class="campo"><label>Entrada de líquidos (ml)</label><input type="number" id="nge-entrada"></div>
+      <div class="campo"><label>Salida de líquidos (ml)</label><input type="number" id="nge-salida"></div>
+    </div>
+    <div class="campo"><label>Observaciones</label><textarea id="nge-observaciones" rows="2"></textarea></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarNotaEnfermeriaGeneral()">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarNotaEnfermeriaGeneral(){
+  const registro = {
+    hospitalizacion_id: document.getElementById('nge-hospitalizacion').value, enfermero_id: usuarioActual.id,
+    signos_vitales: { presion: document.getElementById('nge-presion').value.trim(), fc_fr: document.getElementById('nge-fc-fr').value.trim() },
+    medicamento_administrado: document.getElementById('nge-medicamento').value.trim(),
+    dosis: document.getElementById('nge-dosis-via').value.trim(),
+    entrada_liquidos: Number(document.getElementById('nge-entrada').value)||null,
+    salida_liquidos: Number(document.getElementById('nge-salida').value)||null,
+    observaciones: document.getElementById('nge-observaciones').value.trim(),
+  };
+  const { error } = await sb.from('salud_notas_enfermeria').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'enfermeria', null, 'Nota de enfermería');
+  cerrarModal(); mostrarToast('Nota guardada.'); cargarTodo();
+}
+
+/* ================= IMÁGENES DIAGNÓSTICAS ================= */
+function renderImagenes(){
+  const tb = document.querySelector('#tabla-salud_imagenes tbody');
+  if(!tb) return;
+  const lista = cache.salud_imagenes||[];
+  tb.innerHTML = lista.length ? lista.map(i=>`
+    <tr>
+      <td>${i.salud_pacientes?.nombre||'—'}</td>
+      <td>${i.tipo_estudio||'—'}</td>
+      <td>${i.estudio_especifico||'—'}</td>
+      <td>${formatoHora(i.fecha_solicitud)}</td>
+      <td>${pillEstado(i.estado)}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verImagen('${i.id}')">${i.estado==='pendiente'?'Completar':'Ver'}</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="6" class="vacio">Sin órdenes de imágenes.</td></tr>`;
+}
+
+function abrirModalImagen(){
+  abrirModal(`
+    <h3>Nueva orden de imagen</h3>
+    <div class="campo"><label>Paciente</label>
+      <select id="imf-paciente">${cache.salud_pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('')}</select>
+    </div>
+    <div class="campo"><label>Tipo de estudio</label>
+      <select id="imf-tipo">
+        <option value="sonografia">Sonografía</option><option value="radiografia">Radiografía</option>
+        <option value="tomografia">Tomografía</option><option value="resonancia">Resonancia</option><option value="otro">Otro</option>
+      </select>
+    </div>
+    <div class="campo"><label>Estudio específico</label>
+      <input id="imf-estudio" list="dl-estudios-imagen" placeholder="Escribe o elige de la lista...">
+      <datalist id="dl-estudios-imagen">${ESTUDIOS_IMAGEN_COMUNES.map(e=>`<option value="${e}">`).join('')}</datalist>
+    </div>
+    <div class="campo"><label>Diagnóstico presuntivo</label><input id="imf-diagnostico"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarImagen()">Guardar orden</button>
+    </div>
+  `);
+}
+
+async function guardarImagen(){
+  const registro = {
+    paciente_id: document.getElementById('imf-paciente').value, doctor_solicita_id: usuarioActual.id,
+    tipo_estudio: document.getElementById('imf-tipo').value, estudio_especifico: document.getElementById('imf-estudio').value.trim(),
+    diagnostico_presuntivo: document.getElementById('imf-diagnostico').value.trim(),
+  };
+  const { error } = await sb.from('salud_imagenes').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'imagenes', null, registro.estudio_especifico);
+  cerrarModal(); mostrarToast('Orden registrada.'); cargarTodo();
+}
+
+function verImagen(id){
+  const i = cache.salud_imagenes.find(x=>x.id===id);
+  if(!i) return;
+  if(i.estado!=='pendiente'){
+    abrirModal(`
+      <h3>${i.estudio_especifico||i.tipo_estudio}</h3>
+      <div class="detalle-fila"><span class="etiqueta-d">Paciente</span><span class="valor-d">${i.salud_pacientes?.nombre||'—'}</span></div>
+      <div class="detalle-fila"><span class="etiqueta-d">Resultado</span><span class="valor-d">${i.resultado||'—'}</span></div>
+      <div class="modal-acciones"><button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button></div>
+    `);
+    return;
+  }
+  abrirModal(`
+    <h3>Completar resultado — ${i.estudio_especifico||i.tipo_estudio}</h3>
+    <p style="font-size:12px; color:var(--gris); margin-bottom:10px;">Paciente: ${i.salud_pacientes?.nombre||'—'}</p>
+    <div class="campo"><label>Resultado</label><textarea id="imr-resultado" rows="4"></textarea></div>
+    <div class="campo"><label>Incidentes (si los hubo)</label><input id="imr-incidentes"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="completarImagen('${id}')">Guardar resultado</button>
+    </div>
+  `);
+}
+
+async function completarImagen(id){
+  const registro = {
+    resultado: document.getElementById('imr-resultado').value.trim(),
+    incidentes: document.getElementById('imr-incidentes').value.trim(),
+    estado:'realizado', fecha_realizado: new Date().toISOString(), tecnico_id: usuarioActual.id,
+  };
+  const { error } = await sb.from('salud_imagenes').update(registro).eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('editar', 'imagenes', id, 'Resultado registrado');
+  cerrarModal(); mostrarToast('Resultado guardado.'); cargarTodo();
+}
+
+/* ================= LABORATORIO ================= */
+function renderLaboratorios(){
+  const tb = document.querySelector('#tabla-salud_laboratorios tbody');
+  if(!tb) return;
+  const lista = cache.salud_laboratorios||[];
+  tb.innerHTML = lista.length ? lista.map(l=>`
+    <tr>
+      <td>${l.salud_pacientes?.nombre||'—'}</td>
+      <td>${l.examenes_solicitados||'—'}</td>
+      <td>${formatoHora(l.fecha_solicitud)}</td>
+      <td>${pillEstado(l.estado)}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verLaboratorio('${l.id}')">${l.estado==='pendiente'?'Completar':'Ver'}</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="5" class="vacio">Sin órdenes de laboratorio.</td></tr>`;
+}
+
+function abrirModalLaboratorio(){
+  abrirModal(`
+    <h3>Nueva orden de laboratorio</h3>
+    <div class="campo"><label>Paciente</label>
+      <select id="labf-paciente">${cache.salud_pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('')}</select>
+    </div>
+    <div class="campo"><label>Exámenes solicitados</label>
+      <input id="labf-examenes" list="dl-examenes-lab" placeholder="Escribe o elige de la lista...">
+      <datalist id="dl-examenes-lab">${EXAMENES_LAB_COMUNES.map(e=>`<option value="${e}">`).join('')}</datalist>
+    </div>
+    <div class="campo"><label>Diagnóstico presuntivo</label><input id="labf-diagnostico"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarLaboratorio()">Guardar orden</button>
+    </div>
+  `);
+}
+
+async function guardarLaboratorio(){
+  const registro = {
+    paciente_id: document.getElementById('labf-paciente').value, doctor_solicita_id: usuarioActual.id,
+    examenes_solicitados: document.getElementById('labf-examenes').value.trim(),
+    diagnostico_presuntivo: document.getElementById('labf-diagnostico').value.trim(),
+  };
+  const { error } = await sb.from('salud_laboratorios').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'laboratorio', null, registro.examenes_solicitados);
+  cerrarModal(); mostrarToast('Orden registrada.'); cargarTodo();
+}
+
+function verLaboratorio(id){
+  const l = cache.salud_laboratorios.find(x=>x.id===id);
+  if(!l) return;
+  if(l.estado!=='pendiente'){
+    abrirModal(`
+      <h3>${l.examenes_solicitados}</h3>
+      <div class="detalle-fila"><span class="etiqueta-d">Paciente</span><span class="valor-d">${l.salud_pacientes?.nombre||'—'}</span></div>
+      <div class="detalle-fila"><span class="etiqueta-d">Resultado</span><span class="valor-d">${l.resultado||'—'}</span></div>
+      <div class="modal-acciones"><button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button></div>
+    `);
+    return;
+  }
+  abrirModal(`
+    <h3>Completar resultado — ${l.examenes_solicitados}</h3>
+    <p style="font-size:12px; color:var(--gris); margin-bottom:10px;">Paciente: ${l.salud_pacientes?.nombre||'—'}</p>
+    <div class="campo"><label>Resultado</label><textarea id="labr-resultado" rows="4"></textarea></div>
+    <div class="campo"><label>Incidentes (si los hubo)</label><input id="labr-incidentes"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="completarLaboratorio('${id}')">Guardar resultado</button>
+    </div>
+  `);
+}
+
+async function completarLaboratorio(id){
+  const registro = {
+    resultado: document.getElementById('labr-resultado').value.trim(),
+    incidentes: document.getElementById('labr-incidentes').value.trim(),
+    estado:'realizado', fecha_realizado: new Date().toISOString(), tecnico_id: usuarioActual.id,
+  };
+  const { error } = await sb.from('salud_laboratorios').update(registro).eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('editar', 'laboratorio', id, 'Resultado registrado');
+  cerrarModal(); mostrarToast('Resultado guardado.'); cargarTodo();
+}
+
+/* ================= CONSENTIMIENTOS INFORMADOS ================= */
+function renderConsentimientos(){
+  const tb = document.querySelector('#tabla-salud_consentimientos tbody');
+  if(!tb) return;
+  const lista = cache.salud_consentimientos||[];
+  tb.innerHTML = lista.length ? lista.map(c=>`
+    <tr>
+      <td>${c.salud_pacientes?.nombre||'—'}</td>
+      <td>${c.tipo_procedimiento||'—'}</td>
+      <td>${c.salud_usuarios?.nombre||'—'}</td>
+      <td>${formatoHora(c.fecha)}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verDetalles('consentimientos','${c.id}')">Ver</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="5" class="vacio">Sin consentimientos registrados.</td></tr>`;
+}
+
+function abrirModalConsentimiento(){
+  abrirModal(`
+    <h3>Nuevo consentimiento informado</h3>
+    <div class="campo"><label>Paciente</label>
+      <select id="cif-paciente">${cache.salud_pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('')}</select>
+    </div>
+    <div class="campo"><label>Tipo de procedimiento</label>
+      <input id="cif-tipo" list="dl-procedimientos" placeholder="Escribe o elige de la lista...">
+      <datalist id="dl-procedimientos">${PROCEDIMIENTOS_CONSENTIMIENTO.map(p=>`<option value="${p}">`).join('')}</datalist>
+    </div>
+    <div class="campo"><label>Descripción del acto médico</label><textarea id="cif-descripcion" rows="2"></textarea></div>
+    <div class="campo"><label>Riesgos y beneficios explicados</label><textarea id="cif-riesgos" rows="2"></textarea></div>
+    <div class="grid-2">
+      <div class="campo"><label>Nombre del firmante</label><input id="cif-firmante"></div>
+      <div class="campo"><label>Documento de identidad del firmante</label><input id="cif-firmante-doc"></div>
+      <div class="campo"><label>Nombre del testigo</label><input id="cif-testigo"></div>
+      <div class="campo"><label>Documento de identidad del testigo</label><input id="cif-testigo-doc"></div>
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarConsentimiento()">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarConsentimiento(){
+  const registro = {
+    paciente_id: document.getElementById('cif-paciente').value, medico_id: usuarioActual.id,
+    tipo_procedimiento: document.getElementById('cif-tipo').value.trim(),
+    descripcion_acto: document.getElementById('cif-descripcion').value.trim(),
+    riesgos_beneficios: document.getElementById('cif-riesgos').value.trim(),
+    nombre_firmante: document.getElementById('cif-firmante').value.trim(),
+    documento_identidad_firmante: document.getElementById('cif-firmante-doc').value.trim(),
+    nombre_testigo: document.getElementById('cif-testigo').value.trim(),
+    documento_identidad_testigo: document.getElementById('cif-testigo-doc').value.trim(),
+  };
+  if(!registro.paciente_id || !registro.tipo_procedimiento || !registro.nombre_firmante){ mostrarToast('Completa paciente, tipo de procedimiento y firmante.'); return; }
+  const { error } = await sb.from('salud_consentimientos').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'consentimientos', null, registro.tipo_procedimiento);
+  cerrarModal(); mostrarToast('Consentimiento guardado.'); cargarTodo();
 }
 
 /* ================= FACTURACIÓN (con NCF) ================= */
@@ -1996,7 +2862,7 @@ function imprimirReporteCompleto(){
 /* ============================================================
    MOTOR GENÉRICO — Excel, plantillas, selección, detalles, respaldo
    ============================================================ */
-const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', proveedores:'proveedores', compras:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria' };
+const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', proveedores:'proveedores', compras:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria', hospitalizaciones:'hospitalizacion', imagenes:'imagenes', laboratorios:'laboratorio', consentimientos:'consentimientos', emergencias:'emergencias', notasEnfermeria:'enfermeria' };
 
 function filaParaExcel(modulo, row){
   switch(modulo){
@@ -2009,6 +2875,12 @@ function filaParaExcel(modulo, row){
     case 'auditoria': return {Fecha:row.creado_en, Usuario:row.usuario_nombre, Rol:row.usuario_rol, 'Acción':row.accion, 'Módulo':row.modulo, Detalle:row.detalle};
     case 'proveedores': return {Nombre:row.nombre, 'Categoría':row.categoria, Contacto:row.contacto, 'Teléfono':row.telefono, Email:row.email, 'Dirección':row.direccion};
     case 'compras': return {Fecha:row.creado_en, Producto:row.salud_productos?.nombre||'', Proveedor:row.salud_proveedores?.nombre||'', Cantidad:row.cantidad, 'Costo unitario':row.costo_unitario, Lote:row.lote, Vencimiento:row.fecha_vencimiento};
+    case 'hospitalizaciones': return {Paciente:row.salud_pacientes?.nombre||'', Doctor:row.doctor?.nombre||'', Sala:row.sala, Cama:row.cama, 'Fecha ingreso':row.fecha_ingreso, 'Diagnóstico presuntivo':row.diagnostico_presuntivo, Estado:row.estado, 'Fecha egreso':row.fecha_egreso, 'Diagnóstico definitivo':row.diagnostico_definitivo};
+    case 'imagenes': return {Paciente:row.salud_pacientes?.nombre||'', Doctor:row.doctor?.nombre||'', Tipo:row.tipo_estudio, Estudio:row.estudio_especifico, 'Fecha solicitud':row.fecha_solicitud, Estado:row.estado, Resultado:row.resultado};
+    case 'laboratorios': return {Paciente:row.salud_pacientes?.nombre||'', Doctor:row.doctor?.nombre||'', 'Exámenes':row.examenes_solicitados, 'Fecha solicitud':row.fecha_solicitud, Estado:row.estado, Resultado:row.resultado};
+    case 'consentimientos': return {Paciente:row.salud_pacientes?.nombre||'', Médico:row.salud_usuarios?.nombre||'', Procedimiento:row.tipo_procedimiento, Descripción:row.descripcion_acto, Firmante:row.nombre_firmante, Fecha:row.fecha};
+    case 'emergencias': return {Paciente:row.salud_pacientes?.nombre||'', Fecha:row.fecha_atencion, Motivo:row.motivo_consulta, 'Diagnóstico':row.diagnostico_presuntivo, Tratamiento:row.tratamiento, Desenlace:row.desenlace, Estado:row.estado};
+    case 'notasEnfermeria': return {Fecha:row.fecha, Paciente:row.salud_hospitalizaciones?.salud_pacientes?.nombre||'', 'Enfermero/a':row.salud_usuarios?.nombre||'', Medicamento:row.medicamento_administrado, Dosis:row.dosis, Observaciones:row.observaciones};
     default: return row;
   }
 }
