@@ -364,7 +364,10 @@ tr:last-child td{border-bottom:none;}
     <div class="vista" id="vista-salud_citas">
       <div class="encabezado-vista">
         <div><div class="eyebrow">Agenda</div><h2>Citas</h2></div>
-        <button class="btn btn-coral" onclick="abrirModalCita()">+ Nueva cita</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-cita" placeholder="Buscar paciente..." oninput="renderCitas()">
+          <button class="btn btn-coral" onclick="abrirModalCita()">+ Nueva cita</button>
+        </div>
       </div>
       <div class="toolbar-modulo">
         <button class="btn btn-fantasma" onclick="descargarPlantilla('citas')">⭳ Plantilla Excel</button>
@@ -429,7 +432,10 @@ tr:last-child td{border-bottom:none;}
     <div class="vista" id="vista-enfermeria">
       <div class="encabezado-vista">
         <div><div class="eyebrow">Cuidados</div><h2>Enfermería</h2></div>
-        <button class="btn btn-coral" onclick="abrirModalNotaEnfermeriaGeneral()">+ Nueva nota</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-enfermeria" placeholder="Buscar paciente..." oninput="renderEnfermeria()">
+          <button class="btn btn-coral" onclick="abrirModalNotaEnfermeriaGeneral()">+ Nueva nota</button>
+        </div>
       </div>
       <div class="toolbar-modulo">
         <button class="btn btn-fantasma" onclick="abrirExportar('notasEnfermeria')">⭳ Exportar</button>
@@ -462,7 +468,10 @@ tr:last-child td{border-bottom:none;}
     <div class="vista" id="vista-imagenes">
       <div class="encabezado-vista">
         <div><div class="eyebrow">Servicio ambulatorio</div><h2>Imágenes diagnósticas</h2></div>
-        <button class="btn btn-coral" onclick="abrirModalImagen()">+ Nueva orden</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-imagen" placeholder="Buscar paciente..." oninput="renderImagenes()">
+          <button class="btn btn-coral" onclick="abrirModalImagen()">+ Nueva orden</button>
+        </div>
       </div>
       <div class="toolbar-modulo">
         <button class="btn btn-fantasma" onclick="abrirExportar('imagenes')">⭳ Exportar</button>
@@ -477,7 +486,10 @@ tr:last-child td{border-bottom:none;}
     <div class="vista" id="vista-laboratorio">
       <div class="encabezado-vista">
         <div><div class="eyebrow">Servicio ambulatorio</div><h2>Laboratorio</h2></div>
-        <button class="btn btn-coral" onclick="abrirModalLaboratorio()">+ Nueva orden</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-laboratorio" placeholder="Buscar paciente..." oninput="renderLaboratorios()">
+          <button class="btn btn-coral" onclick="abrirModalLaboratorio()">+ Nueva orden</button>
+        </div>
       </div>
       <div class="toolbar-modulo">
         <button class="btn btn-fantasma" onclick="abrirExportar('laboratorios')">⭳ Exportar</button>
@@ -492,7 +504,10 @@ tr:last-child td{border-bottom:none;}
     <div class="vista" id="vista-consentimientos">
       <div class="encabezado-vista">
         <div><div class="eyebrow">Documentos legales</div><h2>Consentimientos informados</h2></div>
-        <button class="btn btn-coral" onclick="abrirModalConsentimiento()">+ Nuevo consentimiento</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-consentimiento" placeholder="Buscar paciente..." oninput="renderConsentimientos()">
+          <button class="btn btn-coral" onclick="abrirModalConsentimiento()">+ Nuevo consentimiento</button>
+        </div>
       </div>
       <div class="toolbar-modulo">
         <button class="btn btn-fantasma" onclick="abrirExportar('consentimientos')">⭳ Exportar</button>
@@ -529,7 +544,10 @@ tr:last-child td{border-bottom:none;}
 
       <div class="encabezado-vista" style="margin-top:26px;">
         <div><div class="eyebrow">Entradas de mercancía</div><h2>Compras por lote</h2></div>
-        <button class="btn btn-coral" onclick="abrirModalCompra()">+ Registrar compra</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-compra" placeholder="Buscar producto o proveedor..." oninput="renderCompras()">
+          <button class="btn btn-coral" onclick="abrirModalCompra()">+ Registrar compra</button>
+        </div>
       </div>
       <p style="font-size:12.5px; color:var(--gris); margin:-8px 0 12px;">Cada compra queda con su propio proveedor, costo y lote — así puedes tener, por ejemplo, 1000 jeringas de un laboratorio y 100 de otro con precios distintos, sin mezclar los costos.</p>
       <div class="toolbar-modulo">
@@ -570,7 +588,10 @@ tr:last-child td{border-bottom:none;}
     <div class="vista" id="vista-facturacion">
       <div class="encabezado-vista">
         <div><div class="eyebrow">Punto de venta</div><h2>Facturación</h2></div>
-        <button class="btn btn-coral" onclick="abrirModalFactura()">+ Nueva factura</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-factura" placeholder="Buscar por NCF o cliente..." oninput="renderFacturas()">
+          <button class="btn btn-coral" onclick="abrirModalFactura()">+ Nueva factura</button>
+        </div>
       </div>
       <div class="toolbar-modulo">
         <button class="btn btn-fantasma" onclick="abrirExportar('facturas')">⭳ Exportar</button>
@@ -649,7 +670,10 @@ tr:last-child td{border-bottom:none;}
     <div class="vista" id="vista-salud_usuarios">
       <div class="encabezado-vista">
         <div><div class="eyebrow">Administración</div><h2>Usuarios</h2></div>
-        <button class="btn btn-coral" onclick="abrirModalUsuario()">+ Nuevo usuario</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-usuario" placeholder="Buscar por nombre..." oninput="renderUsuarios()">
+          <button class="btn btn-coral" onclick="abrirModalUsuario()">+ Nuevo usuario</button>
+        </div>
       </div>
       <div class="toolbar-modulo">
         <button class="btn btn-fantasma" onclick="descargarPlantilla('usuarios')">⭳ Plantilla Excel</button>
@@ -710,6 +734,25 @@ tr:last-child td{border-bottom:none;}
         <table id="tabla-salud_auditoria"><thead><tr><th>Fecha</th><th>Usuario</th><th>Rol</th><th>Acción</th><th>Módulo</th><th>Detalle</th></tr></thead><tbody></tbody></table>
       </div>
       <p style="font-size:12px; color:var(--gris); margin-top:10px;">Se muestran las últimas 500 acciones registradas. El registro de auditoría no se puede editar ni eliminar desde la app.</p>
+    </div>
+
+    <!-- AUDITORÍAS DE CALIDAD -->
+    <div class="vista" id="vista-auditorias_calidad">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Evaluación formal</div><h2>Auditorías de calidad</h2></div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-auditoria-calidad" placeholder="Buscar paciente/área..." oninput="renderAuditoriasCalidad()">
+          <button class="btn btn-coral" onclick="abrirModalAuditoriaCalidad()">+ Nueva auditoría</button>
+        </div>
+      </div>
+      <p style="font-size:12.5px; color:var(--gris); margin:-8px 0 12px;">Aquí un auditor evalúa formalmente un expediente o proceso con un checklist, deja hallazgos y recomendaciones. Cada auditoría creada, editada o finalizada queda también en la bitácora automática de Auditoría.</p>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="abrirExportar('auditoriasCalidad')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('auditorias_calidad')">🖨 Imprimir</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_auditorias_calidad"><thead><tr><th>Fecha</th><th>Auditor</th><th>Tipo</th><th>Área/Paciente</th><th>Calificación</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
     </div>
 
     <!-- MANUAL -->
@@ -831,23 +874,24 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
    ============================================================ */
 
 let usuarioActual = null;
-let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[], salud_proveedores:[], salud_compras:[], salud_solicitudes:[], salud_hospitalizaciones:[], salud_imagenes:[], salud_laboratorios:[], salud_consentimientos:[], salud_emergencias:[], salud_notas_enfermeria:[] };
+let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[], salud_proveedores:[], salud_compras:[], salud_solicitudes:[], salud_hospitalizaciones:[], salud_imagenes:[], salud_laboratorios:[], salud_consentimientos:[], salud_emergencias:[], salud_notas_enfermeria:[], salud_auditorias_calidad:[] };
 
 const TABS_POR_ROL = {
-  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','imagenes','laboratorio','consentimientos','inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria','manual'],
+  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','imagenes','laboratorio','consentimientos','inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria','auditorias_calidad','manual'],
   doctor:       ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','consentimientos','manual'],
   farmaceutico: ['dashboard','inventario','proveedores','facturacion','reportes','manual'],
   cajero:       ['dashboard','facturacion','manual'],
   enfermeria:   ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','manual'],
   laboratorio:  ['dashboard','salud_pacientes','salud_historiales','imagenes','laboratorio','manual'],
   admision:     ['dashboard','salud_pacientes','salud_citas','emergencias','hospitalizacion','manual'],
-  seguros:      ['dashboard','facturacion','reportes','manual']
+  seguros:      ['dashboard','facturacion','reportes','manual'],
+  auditor:      ['dashboard','salud_pacientes','salud_historiales','hospitalizacion','emergencias','imagenes','laboratorio','consentimientos','auditorias_calidad','auditoria','manual']
 };
 const NOMBRE_TAB = {
   dashboard:'Panel', salud_pacientes:'Pacientes', salud_citas:'Citas', salud_historiales:'Historiales',
   emergencias:'Emergencias', hospitalizacion:'Hospitalización', enfermeria:'Enfermería', imagenes:'Imágenes', laboratorio:'Laboratorio', consentimientos:'Consentimientos',
   inventario:'Inventario', proveedores:'Proveedores', facturacion:'Facturación', reportes:'Reportes', salud_usuarios:'Usuarios',
-  auditoria:'Auditoría', manual:'Manual'
+  auditoria:'Auditoría (bitácora)', auditorias_calidad:'Auditorías de calidad', manual:'Manual'
 };
 const MODULOS_PERMISO = [
   {clave:'salud_pacientes', etiqueta:'Pacientes'},
@@ -864,12 +908,14 @@ const MODULOS_PERMISO = [
   {clave:'facturacion', etiqueta:'Facturación'},
   {clave:'reportes', etiqueta:'Reportes'},
   {clave:'salud_usuarios', etiqueta:'Usuarios (administración)'},
-  {clave:'auditoria', etiqueta:'Auditoría'},
+  {clave:'auditoria', etiqueta:'Auditoría (bitácora del sistema)'},
+  {clave:'auditorias_calidad', etiqueta:'Auditorías de calidad'},
 ];
 const GRUPOS_MENU = [
   {clave:'clinica', nombre:'Atención Clínica', tabs:['salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria']},
   {clave:'servicios', nombre:'Servicios', tabs:['laboratorio','imagenes']},
   {clave:'documentos', nombre:'Documentos', tabs:['consentimientos']},
+  {clave:'calidad', nombre:'Calidad', tabs:['auditorias_calidad']},
   {clave:'administracion', nombre:'Administración', tabs:['inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria']},
 ];
 
@@ -988,6 +1034,14 @@ const CONFIG_MODULOS = {
     columnas:[
       {clave:'fecha', etiqueta:'Fecha'}, {clave:'paciente', etiqueta:'Paciente'}, {clave:'enfermero', etiqueta:'Enfermero/a'},
       {clave:'medicamento_administrado', etiqueta:'Medicamento'}, {clave:'observaciones', etiqueta:'Observaciones'},
+    ]
+  },
+  auditoriasCalidad: {
+    tablaSb:'salud_auditorias_calidad', cacheKey:'salud_auditorias_calidad', titulo:'Auditorías de calidad', renderFn:()=>renderAuditoriasCalidad(), soloExportar:true,
+    columnas:[
+      {clave:'fecha', etiqueta:'Fecha'}, {clave:'auditor', etiqueta:'Auditor'}, {clave:'tipo_objeto', etiqueta:'Tipo'},
+      {clave:'area_evaluada', etiqueta:'Área/Paciente'}, {clave:'calificacion', etiqueta:'Calificación'},
+      {clave:'hallazgos', etiqueta:'Hallazgos'}, {clave:'recomendaciones', etiqueta:'Recomendaciones'}, {clave:'estado', etiqueta:'Estado'},
     ]
   }
 };
@@ -1146,6 +1200,10 @@ async function cargarTodo(){
     const { data } = await sb.from('salud_auditoria').select('*').order('creado_en', {ascending:false}).limit(500);
     cache.salud_auditoria = data || [];
   }
+  if(usuarioActual && tabsDelUsuario().includes('auditorias_calidad')){
+    const { data } = await sb.from('salud_auditorias_calidad').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}).limit(300);
+    cache.salud_auditorias_calidad = data || [];
+  }
 
   renderDashboard();
   renderPacientes();
@@ -1164,6 +1222,7 @@ async function cargarTodo(){
   renderReportes();
   renderUsuarios();
   renderAuditoria();
+  renderAuditoriasCalidad();
 }
 
 /* ---------------- DASHBOARD ---------------- */
@@ -1287,8 +1346,10 @@ async function eliminarPaciente(id){
 
 /* ================= CITAS ================= */
 function renderCitas(){
+  const filtro = (document.getElementById('buscar-cita')?.value||'').toLowerCase();
+  const lista = cache.salud_citas.filter(c => (c.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
   const tb = document.querySelector('#tabla-salud_citas tbody');
-  tb.innerHTML = cache.salud_citas.length ? cache.salud_citas.map(c=>`
+  tb.innerHTML = lista.length ? lista.map(c=>`
     <tr>
       <td><input type="checkbox" class="chk-fila" onchange="toggleUno('citas','${c.id}',this)" ${seleccionados.citas.has(c.id)?'checked':''}></td>
       <td>${formatoHora(c.fecha)}</td>
@@ -1636,7 +1697,8 @@ async function eliminarProveedor(id){
 function renderCompras(){
   const tb = document.querySelector('#tabla-salud_compras tbody');
   if(!tb) return;
-  const lista = cache.salud_compras||[];
+  const filtro = (document.getElementById('buscar-compra')?.value||'').toLowerCase();
+  const lista = (cache.salud_compras||[]).filter(c => (c.salud_productos?.nombre||'').toLowerCase().includes(filtro) || (c.salud_proveedores?.nombre||'').toLowerCase().includes(filtro));
   tb.innerHTML = lista.length ? lista.map(c=>`
     <tr>
       <td>${formatoHora(c.creado_en)}</td>
@@ -2071,7 +2133,8 @@ async function guardarDesenlace(emergId){
 function renderEnfermeria(){
   const tb = document.querySelector('#tabla-enfermeria tbody');
   if(!tb) return;
-  const lista = cache.salud_notas_enfermeria||[];
+  const filtro = (document.getElementById('buscar-enfermeria')?.value||'').toLowerCase();
+  const lista = (cache.salud_notas_enfermeria||[]).filter(n => (n.salud_hospitalizaciones?.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
   tb.innerHTML = lista.length ? lista.map(n=>`
     <tr>
       <td>${formatoHora(n.fecha)}</td>
@@ -2125,11 +2188,148 @@ async function guardarNotaEnfermeriaGeneral(){
   cerrarModal(); mostrarToast('Nota guardada.'); cargarTodo();
 }
 
+/* ================= AUDITORÍAS DE CALIDAD ================= */
+const CRITERIOS_SUGERIDOS_AUDITORIA = ['Expediente completo y ordenado','Notas con fecha, hora y firma','Letra legible, sin abreviaturas','Diagnóstico justificado con la evolución','Consentimiento informado presente cuando aplica','Signos vitales registrados correctamente','Órdenes médicas claras y completas','Confidencialidad y manejo adecuado del expediente'];
+let itemsCriteriosTemp = [];
+
+function renderAuditoriasCalidad(){
+  const tb = document.querySelector('#tabla-salud_auditorias_calidad tbody');
+  if(!tb) return;
+  const filtro = (document.getElementById('buscar-auditoria-calidad')?.value||'').toLowerCase();
+  const lista = (cache.salud_auditorias_calidad||[]).filter(a => (a.area_evaluada||'').toLowerCase().includes(filtro) || (a.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
+  tb.innerHTML = lista.length ? lista.map(a=>`
+    <tr>
+      <td>${formatoHora(a.fecha)}</td>
+      <td>${a.salud_usuarios?.nombre||'—'}</td>
+      <td>${a.tipo_objeto||'—'}</td>
+      <td>${a.area_evaluada||a.salud_pacientes?.nombre||'—'}</td>
+      <td>${a.calificacion!=null?a.calificacion+'%':'—'}</td>
+      <td>${a.estado==='finalizada'?'<span class="pill pill-verde">Finalizada</span>':'<span class="pill pill-ambar">Borrador</span>'}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verAuditoriaCalidad('${a.id}')">Ver</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="7" class="vacio">Sin auditorías de calidad registradas.</td></tr>`;
+}
+
+function abrirModalAuditoriaCalidad(){
+  itemsCriteriosTemp = [];
+  abrirModal(`
+    <h3>Nueva auditoría de calidad</h3>
+    <div class="grid-2">
+      <div class="campo"><label>Tipo de objeto evaluado</label>
+        <select id="acf-tipo">
+          <option value="historial">Historial clínico</option><option value="hospitalizacion">Hospitalización</option>
+          <option value="emergencia">Emergencia</option><option value="imagen">Imagen diagnóstica</option>
+          <option value="laboratorio">Laboratorio</option><option value="consentimiento">Consentimiento informado</option>
+          <option value="factura">Facturación</option><option value="proceso_general">Proceso general</option>
+        </select>
+      </div>
+      <div class="campo"><label>Paciente (opcional)</label>
+        <select id="acf-paciente"><option value="">— No aplica —</option>${cache.salud_pacientes.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="campo"><label>Área/proceso evaluado</label><input id="acf-area" placeholder="Ej: Archivo clínico, Sala de emergencias, Farmacia..."></div>
+
+    <hr style="border:none; border-top:1px solid var(--linea); margin:16px 0;">
+    <div class="campo"><label>Criterios de evaluación</label>
+      <div style="display:flex; gap:8px;">
+        <input id="acf-criterio-texto" list="dl-criterios" placeholder="Escribe o elige un criterio..." style="flex:1;">
+        <datalist id="dl-criterios">${CRITERIOS_SUGERIDOS_AUDITORIA.map(c=>`<option value="${c}">`).join('')}</datalist>
+        <select id="acf-criterio-cumple" style="width:110px;"><option value="true">Cumple</option><option value="false">No cumple</option></select>
+        <button type="button" class="btn btn-fantasma" onclick="agregarCriterio()">Agregar</button>
+      </div>
+    </div>
+    <div id="acf-lista-criterios" style="margin-bottom:12px;"></div>
+
+    <div class="campo"><label>Calificación (0-100, opcional)</label><input type="number" id="acf-calificacion" min="0" max="100"></div>
+    <div class="campo"><label>Hallazgos</label><textarea id="acf-hallazgos" rows="2"></textarea></div>
+    <div class="campo"><label>Recomendaciones</label><textarea id="acf-recomendaciones" rows="2"></textarea></div>
+    <div class="campo"><label>Plan de mejora</label><textarea id="acf-plan" rows="2"></textarea></div>
+
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-fantasma" onclick="guardarAuditoriaCalidad('borrador')">Guardar borrador</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarAuditoriaCalidad('finalizada')">Finalizar auditoría</button>
+    </div>
+  `);
+  renderItemsCriteriosTemp();
+}
+
+function agregarCriterio(){
+  const texto = document.getElementById('acf-criterio-texto').value.trim();
+  if(!texto) return;
+  const cumple = document.getElementById('acf-criterio-cumple').value === 'true';
+  itemsCriteriosTemp.push({ criterio: texto, cumple });
+  document.getElementById('acf-criterio-texto').value = '';
+  renderItemsCriteriosTemp();
+}
+function quitarCriterio(idx){ itemsCriteriosTemp.splice(idx,1); renderItemsCriteriosTemp(); }
+function renderItemsCriteriosTemp(){
+  const cont = document.getElementById('acf-lista-criterios');
+  if(!cont) return;
+  cont.innerHTML = itemsCriteriosTemp.length ? itemsCriteriosTemp.map((c,idx)=>`
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--linea); font-size:13px;">
+      <span>${c.cumple?'<span class="pill pill-verde">Cumple</span>':'<span class="pill pill-coral">No cumple</span>'} ${c.criterio}</span>
+      <button type="button" onclick="quitarCriterio(${idx})" style="background:none; border:none; color:var(--coral); cursor:pointer; font-size:15px;">×</button>
+    </div>
+  `).join('') : '<p style="font-size:12px; color:var(--gris);">Sin criterios agregados aún.</p>';
+}
+
+async function guardarAuditoriaCalidad(estado){
+  const registro = {
+    auditor_id: usuarioActual.id,
+    tipo_objeto: document.getElementById('acf-tipo').value,
+    paciente_id: document.getElementById('acf-paciente').value || null,
+    area_evaluada: document.getElementById('acf-area').value.trim(),
+    criterios: itemsCriteriosTemp,
+    calificacion: document.getElementById('acf-calificacion').value ? Number(document.getElementById('acf-calificacion').value) : null,
+    hallazgos: document.getElementById('acf-hallazgos').value.trim(),
+    recomendaciones: document.getElementById('acf-recomendaciones').value.trim(),
+    plan_mejora: document.getElementById('acf-plan').value.trim(),
+    estado,
+  };
+  const { error } = await sb.from('salud_auditorias_calidad').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'auditorias_calidad', null, `${registro.tipo_objeto} — ${registro.area_evaluada || 'sin área especificada'} (${estado})`);
+  cerrarModal(); mostrarToast(estado==='finalizada' ? 'Auditoría finalizada.' : 'Borrador guardado.'); cargarTodo();
+}
+
+function verAuditoriaCalidad(id){
+  const a = cache.salud_auditorias_calidad.find(x=>x.id===id);
+  if(!a) return;
+  const criterios = a.criterios || [];
+  abrirModal(`
+    <h3>Auditoría — ${a.area_evaluada || a.salud_pacientes?.nombre || a.tipo_objeto}</h3>
+    <p style="font-size:11.5px; color:var(--gris); margin-bottom:14px;">${formatoHora(a.fecha)} · Auditor: ${a.salud_usuarios?.nombre||'—'} · ${a.estado==='finalizada'?'<span class="pill pill-verde">Finalizada</span>':'<span class="pill pill-ambar">Borrador</span>'}</p>
+    <div class="detalle-fila"><span class="etiqueta-d">Tipo</span><span class="valor-d">${a.tipo_objeto}</span></div>
+    ${a.calificacion!=null?`<div class="detalle-fila"><span class="etiqueta-d">Calificación</span><span class="valor-d">${a.calificacion}%</span></div>`:''}
+
+    <div style="margin:14px 0 8px; font-weight:600; font-size:13px;">Criterios evaluados</div>
+    ${criterios.length ? criterios.map(c=>`<div class="detalle-fila"><span class="etiqueta-d">${c.cumple?'✅':'❌'} ${c.criterio}</span></div>`).join('') : '<p style="font-size:12px; color:var(--gris);">Sin criterios registrados.</p>'}
+
+    <div class="detalle-fila" style="margin-top:10px;"><span class="etiqueta-d">Hallazgos</span><span class="valor-d">${a.hallazgos||'—'}</span></div>
+    <div class="detalle-fila"><span class="etiqueta-d">Recomendaciones</span><span class="valor-d">${a.recomendaciones||'—'}</span></div>
+    <div class="detalle-fila"><span class="etiqueta-d">Plan de mejora</span><span class="valor-d">${a.plan_mejora||'—'}</span></div>
+
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button>
+      ${a.estado==='borrador' ? `<button class="btn btn-primario" style="width:auto;" onclick="finalizarAuditoriaCalidad('${a.id}')">Finalizar</button>` : ''}
+    </div>
+  `);
+}
+
+async function finalizarAuditoriaCalidad(id){
+  const { error } = await sb.from('salud_auditorias_calidad').update({ estado:'finalizada' }).eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('editar', 'auditorias_calidad', id, 'Auditoría finalizada');
+  cerrarModal(); mostrarToast('Auditoría finalizada.'); cargarTodo();
+}
+
 /* ================= IMÁGENES DIAGNÓSTICAS ================= */
 function renderImagenes(){
   const tb = document.querySelector('#tabla-salud_imagenes tbody');
   if(!tb) return;
-  const lista = cache.salud_imagenes||[];
+  const filtro = (document.getElementById('buscar-imagen')?.value||'').toLowerCase();
+  const lista = (cache.salud_imagenes||[]).filter(i => (i.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
   tb.innerHTML = lista.length ? lista.map(i=>`
     <tr>
       <td>${i.salud_pacientes?.nombre||'—'}</td>
@@ -2218,7 +2418,8 @@ async function completarImagen(id){
 function renderLaboratorios(){
   const tb = document.querySelector('#tabla-salud_laboratorios tbody');
   if(!tb) return;
-  const lista = cache.salud_laboratorios||[];
+  const filtro = (document.getElementById('buscar-laboratorio')?.value||'').toLowerCase();
+  const lista = (cache.salud_laboratorios||[]).filter(l => (l.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
   tb.innerHTML = lista.length ? lista.map(l=>`
     <tr>
       <td>${l.salud_pacientes?.nombre||'—'}</td>
@@ -2300,7 +2501,8 @@ async function completarLaboratorio(id){
 function renderConsentimientos(){
   const tb = document.querySelector('#tabla-salud_consentimientos tbody');
   if(!tb) return;
-  const lista = cache.salud_consentimientos||[];
+  const filtro = (document.getElementById('buscar-consentimiento')?.value||'').toLowerCase();
+  const lista = (cache.salud_consentimientos||[]).filter(c => (c.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
   tb.innerHTML = lista.length ? lista.map(c=>`
     <tr>
       <td>${c.salud_pacientes?.nombre||'—'}</td>
@@ -2359,8 +2561,10 @@ async function guardarConsentimiento(){
 let itemsFacturaTemp = [];
 
 function renderFacturas(){
+  const filtro = (document.getElementById('buscar-factura')?.value||'').toLowerCase();
+  const lista = cache.salud_facturas.filter(f => (f.ncf||'').toLowerCase().includes(filtro) || (f.salud_pacientes?.nombre||'').toLowerCase().includes(filtro) || (f.cliente_nombre||'').toLowerCase().includes(filtro));
   const tb = document.querySelector('#tabla-salud_facturas tbody');
-  tb.innerHTML = cache.salud_facturas.length ? cache.salud_facturas.map(f=>`
+  tb.innerHTML = lista.length ? lista.map(f=>`
     <tr>
       <td><input type="checkbox" class="chk-fila" onchange="toggleUno('facturas','${f.id}',this)" ${seleccionados.facturas.has(f.id)?'checked':''}></td>
       <td class="font-mono">${f.ncf||'—'}</td>
@@ -2603,8 +2807,10 @@ async function anularFactura(id){
 /* ================= USUARIOS (admin) ================= */
 function renderUsuarios(){
   if(!usuarioActual || !tabsDelUsuario().includes('salud_usuarios')) return;
+  const filtro = (document.getElementById('buscar-usuario')?.value||'').toLowerCase();
+  const lista = cache.salud_usuarios.filter(u => u.nombre.toLowerCase().includes(filtro) || u.usuario.toLowerCase().includes(filtro));
   const tb = document.querySelector('#tabla-salud_usuarios tbody');
-  tb.innerHTML = cache.salud_usuarios.length ? cache.salud_usuarios.map(u=>`
+  tb.innerHTML = lista.length ? lista.map(u=>`
     <tr>
       <td><input type="checkbox" class="chk-fila" onchange="toggleUno('usuarios','${u.id}',this)" ${seleccionados.usuarios.has(u.id)?'checked':''}></td>
       <td>${u.nombre}</td>
@@ -2644,6 +2850,7 @@ function abrirModalUsuario(id){
           <option value="laboratorio" ${u?.rol==='laboratorio'?'selected':''}>Laboratorio</option>
           <option value="admision" ${u?.rol==='admision'?'selected':''}>Admisión</option>
           <option value="seguros" ${u?.rol==='seguros'?'selected':''}>Seguros</option>
+          <option value="auditor" ${u?.rol==='auditor'?'selected':''}>Auditor</option>
         </select>
       </div>
       <div class="campo"><label>Estado</label>
@@ -2843,7 +3050,7 @@ function imprimirReporteCompleto(){
 /* ============================================================
    MOTOR GENÉRICO — Excel, plantillas, selección, detalles, respaldo
    ============================================================ */
-const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', proveedores:'proveedores', compras:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria', hospitalizaciones:'hospitalizacion', imagenes:'imagenes', laboratorios:'laboratorio', consentimientos:'consentimientos', emergencias:'emergencias', notasEnfermeria:'enfermeria' };
+const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', proveedores:'proveedores', compras:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria', hospitalizaciones:'hospitalizacion', imagenes:'imagenes', laboratorios:'laboratorio', consentimientos:'consentimientos', emergencias:'emergencias', notasEnfermeria:'enfermeria', auditoriasCalidad:'auditorias_calidad' };
 
 function filaParaExcel(modulo, row){
   switch(modulo){
@@ -2862,6 +3069,7 @@ function filaParaExcel(modulo, row){
     case 'consentimientos': return {Paciente:row.salud_pacientes?.nombre||'', Médico:row.salud_usuarios?.nombre||'', Procedimiento:row.tipo_procedimiento, Descripción:row.descripcion_acto, Firmante:row.nombre_firmante, Fecha:row.fecha};
     case 'emergencias': return {Paciente:row.salud_pacientes?.nombre||'', Fecha:row.fecha_atencion, Motivo:row.motivo_consulta, 'Diagnóstico':row.diagnostico_presuntivo, Tratamiento:row.tratamiento, Desenlace:row.desenlace, Estado:row.estado};
     case 'notasEnfermeria': return {Fecha:row.fecha, Paciente:row.salud_hospitalizaciones?.salud_pacientes?.nombre||'', 'Enfermero/a':row.salud_usuarios?.nombre||'', Medicamento:row.medicamento_administrado, Dosis:row.dosis, Observaciones:row.observaciones};
+    case 'auditoriasCalidad': return {Fecha:row.fecha, Auditor:row.salud_usuarios?.nombre||'', Tipo:row.tipo_objeto, 'Área/Paciente':row.area_evaluada||row.salud_pacientes?.nombre||'', Calificación:row.calificacion, Hallazgos:row.hallazgos, Recomendaciones:row.recomendaciones, Estado:row.estado};
     default: return row;
   }
 }
