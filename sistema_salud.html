@@ -705,24 +705,56 @@ tr:last-child td{border-bottom:none;}
       </div>
     </div>
 
-    <!-- CATÁLOGO CIE-10 -->
+    <!-- CATÁLOGOS CLÍNICOS (CIE-10 + Medicamentos) -->
     <div class="vista" id="vista-catalogo_cie10">
       <div class="encabezado-vista">
-        <div><div class="eyebrow">Codificación de diagnósticos</div><h2>Catálogo CIE-10</h2></div>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <input class="buscador" id="buscar-cie10" placeholder="Buscar código o descripción..." oninput="renderCatalogoCie10()">
-          <button class="btn btn-coral" onclick="abrirModalCie10()">+ Nuevo código</button>
+        <div><div class="eyebrow">Codificación y catálogos</div><h2>Catálogos Clínicos</h2></div>
+      </div>
+      <div style="display:flex; gap:8px; margin:-6px 0 14px;">
+        <button class="btn btn-primario" id="subtab-cie10-diagnosticos" style="padding:8px 14px; font-size:12.5px;" onclick="mostrarSubCatalogo('diagnosticos')">Diagnósticos (CIE-10)</button>
+        <button class="btn btn-fantasma" id="subtab-cie10-medicamentos" style="padding:8px 14px; font-size:12.5px;" onclick="mostrarSubCatalogo('medicamentos')">Medicamentos</button>
+      </div>
+
+      <!-- SUB: DIAGNÓSTICOS CIE-10 -->
+      <div id="subvista-cie10-diagnosticos">
+        <div class="encabezado-vista">
+          <div></div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <input class="buscador" id="buscar-cie10" placeholder="Buscar código o descripción..." oninput="renderCatalogoCie10()">
+            <button class="btn btn-coral" onclick="abrirModalCie10()">+ Nuevo código</button>
+          </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--gris); margin:-8px 0 12px;">Trae una base inicial de ~80 códigos comunes. Para tener el catálogo oficial completo, descarga la tabla CIE-10 de tu Ministerio de Salud e impórtala aquí con "Importar Excel".</p>
+        <div class="toolbar-modulo">
+          <button class="btn btn-fantasma" onclick="descargarPlantilla('catalogoCie10')">⭳ Plantilla Excel</button>
+          <label class="btn btn-fantasma">⭱ Importar Excel<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="importarExcel(event,'catalogoCie10')"></label>
+          <button class="btn btn-fantasma" onclick="exportarCatalogoCie10Completo()">⭳ Exportar catálogo completo</button>
+          <button class="btn btn-fantasma" onclick="imprimirModulo('catalogo_cie10')">🖨 Imprimir</button>
+        </div>
+        <div class="panel tabla-wrap">
+          <table id="tabla-salud_catalogo_cie10"><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th></th></tr></thead><tbody></tbody></table>
         </div>
       </div>
-      <p style="font-size:12.5px; color:var(--gris); margin:-8px 0 12px;">Trae una base inicial de ~80 códigos comunes. Para tener el catálogo oficial completo, descarga la tabla CIE-10 de tu Ministerio de Salud e impórtala aquí con "Importar Excel".</p>
-      <div class="toolbar-modulo">
-        <button class="btn btn-fantasma" onclick="descargarPlantilla('catalogoCie10')">⭳ Plantilla Excel</button>
-        <label class="btn btn-fantasma">⭱ Importar Excel<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="importarExcel(event,'catalogoCie10')"></label>
-        <button class="btn btn-fantasma" onclick="exportarCatalogoCie10Completo()">⭳ Exportar catálogo completo</button>
-        <button class="btn btn-fantasma" onclick="imprimirModulo('catalogo_cie10')">🖨 Imprimir</button>
-      </div>
-      <div class="panel tabla-wrap">
-        <table id="tabla-salud_catalogo_cie10"><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th></th></tr></thead><tbody></tbody></table>
+
+      <!-- SUB: MEDICAMENTOS -->
+      <div id="subvista-cie10-medicamentos" style="display:none;">
+        <div class="encabezado-vista">
+          <div></div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <input class="buscador" id="buscar-medicamentos" placeholder="Buscar nombre genérico, comercial o laboratorio..." oninput="renderCatalogoMedicamentos()">
+            <button class="btn btn-coral" onclick="abrirModalMedicamento()">+ Nuevo medicamento</button>
+          </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--gris); margin:-8px 0 12px;">Catálogo propio de medicamentos. Descarga la plantilla e importa tu lista (Vademécum, formulario de tu Ministerio, etc.).</p>
+        <div class="toolbar-modulo">
+          <button class="btn btn-fantasma" onclick="descargarPlantilla('catalogoMedicamentos')">⭳ Plantilla Excel</button>
+          <label class="btn btn-fantasma">⭱ Importar Excel<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="importarExcel(event,'catalogoMedicamentos')"></label>
+          <button class="btn btn-fantasma" onclick="exportarCatalogoMedicamentosCompleto()">⭳ Exportar catálogo completo</button>
+          <button class="btn btn-fantasma" onclick="imprimirModulo('catalogoMedicamentos')">🖨 Imprimir</button>
+        </div>
+        <div class="panel tabla-wrap">
+          <table id="tabla-salud_catalogo_medicamentos"><thead><tr><th>Nombre genérico</th><th>Nombre comercial</th><th>Presentación</th><th>Concentración</th><th>Laboratorio</th><th>Categoría</th><th></th></tr></thead><tbody></tbody></table>
+        </div>
       </div>
     </div>
 
@@ -931,7 +963,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
    ============================================================ */
 
 let usuarioActual = null;
-let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[], salud_proveedores:[], salud_compras:[], salud_solicitudes:[], salud_hospitalizaciones:[], salud_imagenes:[], salud_laboratorios:[], salud_consentimientos:[], salud_emergencias:[], salud_notas_enfermeria:[], salud_auditorias_calidad:[], salud_protocolos_clinicos:[], salud_orden_medicamentos:[], salud_administraciones_medicamento:[], ultimas_evoluciones:[], salud_catalogo_cie10:[] };
+let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[], salud_proveedores:[], salud_compras:[], salud_solicitudes:[], salud_hospitalizaciones:[], salud_imagenes:[], salud_laboratorios:[], salud_consentimientos:[], salud_emergencias:[], salud_notas_enfermeria:[], salud_auditorias_calidad:[], salud_protocolos_clinicos:[], salud_orden_medicamentos:[], salud_administraciones_medicamento:[], ultimas_evoluciones:[], salud_catalogo_cie10:[], salud_catalogo_medicamentos:[] };
 
 const TABS_POR_ROL = {
   admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','imagenes','laboratorio','consentimientos','protocolos_clinicos','despacho_farmacia','inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria','auditorias_calidad','catalogo_cie10','manual'],
@@ -1115,6 +1147,13 @@ const CONFIG_MODULOS = {
     tablaSb:'salud_catalogo_cie10', cacheKey:'salud_catalogo_cie10', titulo:'Catálogo CIE-10', renderFn:()=>renderCatalogoCie10(),
     columnas:[
       {clave:'codigo', etiqueta:'Código (obligatorio)'}, {clave:'descripcion', etiqueta:'Descripción (obligatorio)'}, {clave:'categoria', etiqueta:'Categoría'},
+    ]
+  },
+  catalogoMedicamentos: {
+    tablaSb:'salud_catalogo_medicamentos', cacheKey:'salud_catalogo_medicamentos', titulo:'Catálogo de Medicamentos', renderFn:()=>renderCatalogoMedicamentos(),
+    columnas:[
+      {clave:'nombre_generico', etiqueta:'Nombre genérico (obligatorio)'}, {clave:'nombre_comercial', etiqueta:'Nombre comercial'}, {clave:'presentacion', etiqueta:'Presentación'},
+      {clave:'concentracion', etiqueta:'Concentración'}, {clave:'laboratorio', etiqueta:'Laboratorio'}, {clave:'categoria', etiqueta:'Categoría'},
     ]
   }
 };
@@ -1307,6 +1346,7 @@ async function cargarTodo(){
   renderProtocolosClinicos();
   renderDespachoFarmacia();
   renderCatalogoCie10();
+  renderCatalogoMedicamentos();
 }
 
 /* ---------------- DASHBOARD ---------------- */
@@ -2195,6 +2235,137 @@ async function exportarCatalogoCie10Completo(){
   XLSX.writeFile(wb, `catalogo_cie10_${new Date().toISOString().slice(0,10)}.xlsx`);
   registrarAuditoria('exportar', 'catalogo_cie10', null, `Exportación completa: ${todos.length} códigos`);
   mostrarToast(`Exportados ${todos.length} códigos.`);
+}
+
+function mostrarSubCatalogo(sub){
+  const btnD = document.getElementById('subtab-cie10-diagnosticos');
+  const btnM = document.getElementById('subtab-cie10-medicamentos');
+  const vD = document.getElementById('subvista-cie10-diagnosticos');
+  const vM = document.getElementById('subvista-cie10-medicamentos');
+  if(sub==='medicamentos'){
+    vD.style.display='none'; vM.style.display='block';
+    btnD.className='btn btn-fantasma'; btnM.className='btn btn-primario';
+    renderCatalogoMedicamentos();
+  } else {
+    vM.style.display='none'; vD.style.display='block';
+    btnM.className='btn btn-fantasma'; btnD.className='btn btn-primario';
+    renderCatalogoCie10();
+  }
+}
+
+/* ================= CATÁLOGO DE MEDICAMENTOS ================= */
+let medListaActual = [];
+
+async function renderCatalogoMedicamentos(){
+  const tb = document.querySelector('#tabla-salud_catalogo_medicamentos tbody');
+  if(!tb) return;
+  const filtro = (document.getElementById('buscar-medicamentos')?.value||'').trim();
+
+  if(!filtro){
+    tb.innerHTML = `<tr><td colspan="7" class="vacio">Escribe un nombre genérico, comercial o laboratorio para buscar (el catálogo puede tener miles de entradas).</td></tr>`;
+    medListaActual = [];
+    return;
+  }
+  tb.innerHTML = `<tr><td colspan="7" class="vacio">Buscando...</td></tr>`;
+  const { data, error } = await sb.from('salud_catalogo_medicamentos')
+    .select('*')
+    .or(`nombre_generico.ilike.%${filtro}%,nombre_comercial.ilike.%${filtro}%,laboratorio.ilike.%${filtro}%`)
+    .eq('activo', true)
+    .order('nombre_generico')
+    .limit(200);
+  if(error){ tb.innerHTML = `<tr><td colspan="7" class="vacio">Error al buscar: ${error.message}</td></tr>`; return; }
+  medListaActual = data || [];
+  tb.innerHTML = medListaActual.length ? medListaActual.map(m=>`
+    <tr>
+      <td><strong>${m.nombre_generico}</strong></td>
+      <td>${m.nombre_comercial||'—'}</td>
+      <td>${m.presentacion||'—'}</td>
+      <td>${m.concentracion||'—'}</td>
+      <td>${m.laboratorio||'—'}</td>
+      <td>${m.categoria||'—'}</td>
+      <td>
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalMedicamentoDirecto('${m.id}')">Editar</button>
+        <button class="btn btn-peligro" style="padding:6px 10px; font-size:12px;" onclick="eliminarMedicamento('${m.id}')">Eliminar</button>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="7" class="vacio">Sin coincidencias (mostrando máximo 200 resultados por búsqueda).</td></tr>`;
+}
+
+function abrirModalMedicamentoDirecto(id){
+  const m = medListaActual.find(x=>x.id===id);
+  if(!m) return;
+  abrirModalMedicamento(id, m);
+}
+
+function abrirModalMedicamento(id, objetoPrecargado){
+  const m = objetoPrecargado || null;
+  abrirModal(`
+    <h3>${m?'Editar medicamento':'Nuevo medicamento'}</h3>
+    <div class="grid-2">
+      <div class="campo"><label>Nombre genérico</label><input id="medf-generico" value="${m?.nombre_generico||''}" placeholder="Ej: Amoxicilina"></div>
+      <div class="campo"><label>Nombre comercial</label><input id="medf-comercial" value="${m?.nombre_comercial||''}" placeholder="Ej: Amoxil"></div>
+    </div>
+    <div class="grid-2">
+      <div class="campo"><label>Presentación</label><input id="medf-presentacion" value="${m?.presentacion||''}" placeholder="Ej: Tableta, Jarabe, Inyectable"></div>
+      <div class="campo"><label>Concentración</label><input id="medf-concentracion" value="${m?.concentracion||''}" placeholder="Ej: 500mg"></div>
+    </div>
+    <div class="grid-2">
+      <div class="campo"><label>Laboratorio</label><input id="medf-laboratorio" value="${m?.laboratorio||''}"></div>
+      <div class="campo"><label>Categoría</label><input id="medf-categoria" value="${m?.categoria||''}" placeholder="Ej: Antibiótico"></div>
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarMedicamento(${m?`'${m.id}'`:'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarMedicamento(id){
+  const registro = {
+    nombre_generico: document.getElementById('medf-generico').value.trim(),
+    nombre_comercial: document.getElementById('medf-comercial').value.trim(),
+    presentacion: document.getElementById('medf-presentacion').value.trim(),
+    concentracion: document.getElementById('medf-concentracion').value.trim(),
+    laboratorio: document.getElementById('medf-laboratorio').value.trim(),
+    categoria: document.getElementById('medf-categoria').value.trim(),
+  };
+  if(!registro.nombre_generico){ mostrarToast('El nombre genérico es obligatorio.'); return; }
+  const { error } = id ? await sb.from('salud_catalogo_medicamentos').update(registro).eq('id', id)
+                        : await sb.from('salud_catalogo_medicamentos').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria(id?'editar':'crear', 'catalogo_medicamentos', id, registro.nombre_generico);
+  cerrarModal(); mostrarToast('Medicamento guardado.'); renderCatalogoMedicamentos();
+}
+
+async function eliminarMedicamento(id){
+  if(!confirm('¿Eliminar este medicamento del catálogo?')) return;
+  const { error } = await sb.from('salud_catalogo_medicamentos').delete().eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('eliminar', 'catalogo_medicamentos', id, '');
+  mostrarToast('Medicamento eliminado.'); renderCatalogoMedicamentos();
+}
+
+async function exportarCatalogoMedicamentosCompleto(){
+  mostrarToast('Preparando exportación completa, puede tardar un momento...');
+  let todos = [];
+  let desde = 0;
+  const TAMANO = 1000;
+  while(true){
+    const { data, error } = await sb.from('salud_catalogo_medicamentos').select('nombre_generico, nombre_comercial, presentacion, concentracion, laboratorio, categoria').eq('activo', true).order('nombre_generico').range(desde, desde+TAMANO-1);
+    if(error){ mostrarToast('Error: '+error.message); return; }
+    if(!data || !data.length) break;
+    todos = todos.concat(data);
+    if(data.length < TAMANO) break;
+    desde += TAMANO;
+  }
+  if(!todos.length){ mostrarToast('El catálogo está vacío.'); return; }
+  const filas = todos.map(m=>({ 'Nombre genérico':m.nombre_generico, 'Nombre comercial':m.nombre_comercial, Presentación:m.presentacion, Concentración:m.concentracion, Laboratorio:m.laboratorio, Categoría:m.categoria }));
+  const ws = XLSX.utils.json_to_sheet(filas);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Medicamentos'.slice(0,31));
+  XLSX.writeFile(wb, `catalogo_medicamentos_${new Date().toISOString().slice(0,10)}.xlsx`);
+  registrarAuditoria('exportar', 'catalogo_medicamentos', null, `Exportación completa: ${todos.length} medicamentos`);
+  mostrarToast(`Exportados ${todos.length} medicamentos.`);
 }
 
 function renderProtocolosClinicos(){
@@ -3771,7 +3942,7 @@ function imprimirReporteCompleto(){
 /* ============================================================
    MOTOR GENÉRICO — Excel, plantillas, selección, detalles, respaldo
    ============================================================ */
-const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', proveedores:'proveedores', compras:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria', hospitalizaciones:'hospitalizacion', imagenes:'imagenes', laboratorios:'laboratorio', consentimientos:'consentimientos', emergencias:'emergencias', notasEnfermeria:'enfermeria', auditoriasCalidad:'auditorias_calidad', protocolosClinicos:'protocolos_clinicos', despacho_farmacia:'despacho_farmacia', catalogoCie10:'catalogo_cie10' };
+const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', proveedores:'proveedores', compras:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria', hospitalizaciones:'hospitalizacion', imagenes:'imagenes', laboratorios:'laboratorio', consentimientos:'consentimientos', emergencias:'emergencias', notasEnfermeria:'enfermeria', auditoriasCalidad:'auditorias_calidad', protocolosClinicos:'protocolos_clinicos', despacho_farmacia:'despacho_farmacia', catalogoCie10:'catalogo_cie10', catalogoMedicamentos:'catalogo_cie10' };
 
 function filaParaExcel(modulo, row){
   switch(modulo){
@@ -3793,6 +3964,7 @@ function filaParaExcel(modulo, row){
     case 'auditoriasCalidad': return {Fecha:row.fecha, Auditor:row.salud_usuarios?.nombre||'', Tipo:row.tipo_objeto, 'Área/Paciente':row.area_evaluada||row.salud_pacientes?.nombre||'', Calificación:row.calificacion, Hallazgos:row.hallazgos, Recomendaciones:row.recomendaciones, Estado:row.estado};
     case 'protocolosClinicos': return {Condición:row.condicion, 'Situación clínica':row.situacion_clinica, 'Solución aplicada':row.solucion_aplicada, 'Medicamentos usados':row.medicamentos_usados, Resultado:row.resultado, Autor:row.autor?.nombre||'', Verificado:row.verificado?'Sí':'No'};
     case 'catalogoCie10': return {Código:row.codigo, Descripción:row.descripcion, Categoría:row.categoria};
+    case 'catalogoMedicamentos': return {'Nombre genérico':row.nombre_generico, 'Nombre comercial':row.nombre_comercial, 'Presentación':row.presentacion, 'Concentración':row.concentracion, Laboratorio:row.laboratorio, Categoría:row.categoria};
     default: return row;
   }
 }
@@ -3894,6 +4066,10 @@ async function prepararRegistroImportado(modulo, obj){
     if(!obj.codigo || !obj.descripcion) return null;
     return { codigo:obj.codigo.trim(), descripcion:obj.descripcion, categoria:obj.categoria };
   }
+  if(modulo==='catalogoMedicamentos'){
+    if(!obj.nombre_generico) return null;
+    return { nombre_generico:obj.nombre_generico.trim(), nombre_comercial:obj.nombre_comercial, presentacion:obj.presentacion, concentracion:obj.concentracion, laboratorio:obj.laboratorio, categoria:obj.categoria };
+  }
   return null;
 }
 
@@ -3940,6 +4116,8 @@ async function importarExcel(event, modulo){
 function imprimirModulo(modulo){
   const tab = MODULO_A_TAB[modulo];
   if(tab) cambiarTab(tab);
+  if(modulo==='catalogoMedicamentos') mostrarSubCatalogo('medicamentos');
+  if(modulo==='catalogo_cie10') mostrarSubCatalogo('diagnosticos');
   setTimeout(()=>window.print(), 200);
 }
 
