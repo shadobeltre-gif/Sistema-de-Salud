@@ -500,6 +500,21 @@ tr:last-child td{border-bottom:none;}
       </div>
     </div>
 
+    <!-- DESPACHO DE FARMACIA -->
+    <div class="vista" id="vista-despacho_farmacia">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Pacientes internados</div><h2>Despacho de Farmacia</h2></div>
+        <input class="buscador" id="buscar-despacho" placeholder="Buscar paciente/medicamento..." oninput="renderDespachoFarmacia()">
+      </div>
+      <p style="font-size:12.5px; color:var(--gris); margin:-8px 0 12px;">Medicamentos de órdenes activas, según su frecuencia. Una orden vence a las 24 horas de creada — pasado ese tiempo, sus medicamentos quedan bloqueados hasta que el médico registre una orden nueva en el expediente del paciente.</p>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="imprimirModulo('despacho_farmacia')">🖨 Imprimir</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-despacho-farmacia"><thead><tr><th>Paciente</th><th>Medicamento</th><th>Dosis/Vía</th><th>Frecuencia</th><th>Próxima dosis</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
     <!-- CONSENTIMIENTOS -->
     <div class="vista" id="vista-consentimientos">
       <div class="encabezado-vista">
@@ -687,6 +702,27 @@ tr:last-child td{border-bottom:none;}
       </div>
       <div class="panel tabla-wrap">
         <table id="tabla-salud_usuarios"><thead><tr><th><input type="checkbox" class="chk-fila" onchange="toggleTodos('usuarios',this)"></th><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <!-- CATÁLOGO CIE-10 -->
+    <div class="vista" id="vista-catalogo_cie10">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Codificación de diagnósticos</div><h2>Catálogo CIE-10</h2></div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-cie10" placeholder="Buscar código o descripción..." oninput="renderCatalogoCie10()">
+          <button class="btn btn-coral" onclick="abrirModalCie10()">+ Nuevo código</button>
+        </div>
+      </div>
+      <p style="font-size:12.5px; color:var(--gris); margin:-8px 0 12px;">Trae una base inicial de ~80 códigos comunes. Para tener el catálogo oficial completo, descarga la tabla CIE-10 de tu Ministerio de Salud e impórtala aquí con "Importar Excel".</p>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="descargarPlantilla('catalogoCie10')">⭳ Plantilla Excel</button>
+        <label class="btn btn-fantasma">⭱ Importar Excel<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="importarExcel(event,'catalogoCie10')"></label>
+        <button class="btn btn-fantasma" onclick="exportarCatalogoCie10Completo()">⭳ Exportar catálogo completo</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('catalogo_cie10')">🖨 Imprimir</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_catalogo_cie10"><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
 
@@ -895,14 +931,14 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
    ============================================================ */
 
 let usuarioActual = null;
-let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[], salud_proveedores:[], salud_compras:[], salud_solicitudes:[], salud_hospitalizaciones:[], salud_imagenes:[], salud_laboratorios:[], salud_consentimientos:[], salud_emergencias:[], salud_notas_enfermeria:[], salud_auditorias_calidad:[], salud_protocolos_clinicos:[] };
+let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[], salud_proveedores:[], salud_compras:[], salud_solicitudes:[], salud_hospitalizaciones:[], salud_imagenes:[], salud_laboratorios:[], salud_consentimientos:[], salud_emergencias:[], salud_notas_enfermeria:[], salud_auditorias_calidad:[], salud_protocolos_clinicos:[], salud_orden_medicamentos:[], salud_administraciones_medicamento:[], ultimas_evoluciones:[], salud_catalogo_cie10:[] };
 
 const TABS_POR_ROL = {
-  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','imagenes','laboratorio','consentimientos','protocolos_clinicos','inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria','auditorias_calidad','manual'],
+  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','imagenes','laboratorio','consentimientos','protocolos_clinicos','despacho_farmacia','inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria','auditorias_calidad','catalogo_cie10','manual'],
   doctor:       ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','consentimientos','protocolos_clinicos','manual'],
-  farmaceutico: ['dashboard','inventario','proveedores','facturacion','reportes','manual'],
+  farmaceutico: ['dashboard','despacho_farmacia','inventario','proveedores','facturacion','reportes','manual'],
   cajero:       ['dashboard','facturacion','manual'],
-  enfermeria:   ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','manual'],
+  enfermeria:   ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','despacho_farmacia','manual'],
   laboratorio:  ['dashboard','salud_pacientes','salud_historiales','imagenes','laboratorio','manual'],
   admision:     ['dashboard','salud_pacientes','salud_citas','emergencias','hospitalizacion','manual'],
   seguros:      ['dashboard','facturacion','reportes','manual'],
@@ -911,8 +947,8 @@ const TABS_POR_ROL = {
 const NOMBRE_TAB = {
   dashboard:'Panel', salud_pacientes:'Pacientes', salud_citas:'Citas', salud_historiales:'Historiales',
   emergencias:'Emergencias', hospitalizacion:'Hospitalización', enfermeria:'Enfermería', imagenes:'Imágenes', laboratorio:'Laboratorio', consentimientos:'Consentimientos',
-  protocolos_clinicos:'Protocolos y Casos', inventario:'Inventario', proveedores:'Proveedores', facturacion:'Facturación', reportes:'Reportes', salud_usuarios:'Usuarios',
-  auditoria:'Auditoría (bitácora)', auditorias_calidad:'Auditorías de calidad', manual:'Manual'
+  protocolos_clinicos:'Protocolos y Casos', despacho_farmacia:'Despacho de Farmacia', inventario:'Inventario', proveedores:'Proveedores', facturacion:'Facturación', reportes:'Reportes', salud_usuarios:'Usuarios',
+  auditoria:'Auditoría (bitácora)', auditorias_calidad:'Auditorías de calidad', catalogo_cie10:'Catálogo CIE-10', manual:'Manual'
 };
 const MODULOS_PERMISO = [
   {clave:'salud_pacientes', etiqueta:'Pacientes'},
@@ -925,6 +961,7 @@ const MODULOS_PERMISO = [
   {clave:'laboratorio', etiqueta:'Laboratorio'},
   {clave:'consentimientos', etiqueta:'Consentimientos informados'},
   {clave:'protocolos_clinicos', etiqueta:'Protocolos y casos verificados'},
+  {clave:'despacho_farmacia', etiqueta:'Despacho de Farmacia'},
   {clave:'inventario', etiqueta:'Inventario'},
   {clave:'proveedores', etiqueta:'Proveedores'},
   {clave:'facturacion', etiqueta:'Facturación'},
@@ -932,13 +969,14 @@ const MODULOS_PERMISO = [
   {clave:'salud_usuarios', etiqueta:'Usuarios (administración)'},
   {clave:'auditoria', etiqueta:'Auditoría (bitácora del sistema)'},
   {clave:'auditorias_calidad', etiqueta:'Auditorías de calidad'},
+  {clave:'catalogo_cie10', etiqueta:'Catálogo CIE-10'},
 ];
 const GRUPOS_MENU = [
   {clave:'clinica', nombre:'Atención Clínica', tabs:['salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria']},
-  {clave:'servicios', nombre:'Servicios', tabs:['laboratorio','imagenes']},
+  {clave:'servicios', nombre:'Servicios', tabs:['laboratorio','imagenes','despacho_farmacia']},
   {clave:'documentos', nombre:'Documentos', tabs:['consentimientos']},
   {clave:'calidad', nombre:'Calidad', tabs:['protocolos_clinicos','auditorias_calidad']},
-  {clave:'administracion', nombre:'Administración', tabs:['inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria']},
+  {clave:'administracion', nombre:'Administración', tabs:['inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria','catalogo_cie10']},
 ];
 
 /* ============================================================
@@ -1072,6 +1110,12 @@ const CONFIG_MODULOS = {
       {clave:'condicion', etiqueta:'Condición (obligatorio)'}, {clave:'situacion_clinica', etiqueta:'Situación clínica'}, {clave:'solucion_aplicada', etiqueta:'Solución aplicada'},
       {clave:'medicamentos_usados', etiqueta:'Medicamentos usados'}, {clave:'resultado', etiqueta:'Resultado'}, {clave:'notas', etiqueta:'Notas adicionales'},
     ]
+  },
+  catalogoCie10: {
+    tablaSb:'salud_catalogo_cie10', cacheKey:'salud_catalogo_cie10', titulo:'Catálogo CIE-10', renderFn:()=>renderCatalogoCie10(),
+    columnas:[
+      {clave:'codigo', etiqueta:'Código (obligatorio)'}, {clave:'descripcion', etiqueta:'Descripción (obligatorio)'}, {clave:'categoria', etiqueta:'Categoría'},
+    ]
   }
 };
 let seleccionados = { pacientes:new Set(), citas:new Set(), historiales:new Set(), productos:new Set(), facturas:new Set(), usuarios:new Set(), proveedores:new Set() };
@@ -1192,7 +1236,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
 /* ---------------- CARGA DE DATOS ---------------- */
 async function cargarTodo(){
-  const [p, c, h, pr, f, u, prov, comp, sol, hosp, img, lab, cons, emer, enf, prot] = await Promise.all([
+  const [p, c, h, pr, f, u, prov, comp, sol, hosp, img, lab, cons, emer, enf, prot, ordmed, admmed, evol] = await Promise.all([
     sb.from('salud_pacientes').select('*').order('nombre'),
     sb.from('salud_citas').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}),
     sb.from('salud_historiales').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}),
@@ -1208,7 +1252,10 @@ async function cargarTodo(){
     sb.from('salud_consentimientos').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}).limit(300),
     sb.from('salud_emergencias').select('*, salud_pacientes(nombre)').order('fecha_atencion', {ascending:false}).limit(300),
     sb.from('salud_notas_enfermeria').select('*, salud_usuarios(nombre), salud_hospitalizaciones(sala, cama, salud_pacientes(nombre))').order('fecha', {ascending:false}).limit(300),
-    sb.from('salud_protocolos_clinicos').select('*, autor:salud_usuarios!autor_id(nombre), verificador:salud_usuarios!verificado_por(nombre)').eq('activo', true).order('creado_en', {ascending:false}).limit(300)
+    sb.from('salud_protocolos_clinicos').select('*, autor:salud_usuarios!autor_id(nombre), verificador:salud_usuarios!verificado_por(nombre)').eq('activo', true).order('creado_en', {ascending:false}).limit(300),
+    sb.from('salud_orden_medicamentos').select('*, salud_ordenes_medicas(fecha), salud_hospitalizaciones(sala, cama, estado, salud_pacientes(nombre))').eq('activo', true).order('creado_en', {ascending:false}).limit(500),
+    sb.from('salud_administraciones_medicamento').select('*').order('fecha_administrada', {ascending:false}).limit(1000),
+    sb.from('salud_notas_evolucion').select('hospitalizacion_id, fecha').order('fecha', {ascending:false}).limit(1000)
   ]);
   cache.salud_pacientes = p.data || [];
   cache.salud_citas = c.data || [];
@@ -1226,6 +1273,9 @@ async function cargarTodo(){
   cache.salud_emergencias = emer.data || [];
   cache.salud_notas_enfermeria = enf.data || [];
   cache.salud_protocolos_clinicos = prot.data || [];
+  cache.salud_orden_medicamentos = ordmed.data || [];
+  cache.salud_administraciones_medicamento = admmed.data || [];
+  cache.ultimas_evoluciones = evol.data || [];
 
   if(usuarioActual && tabsDelUsuario().includes('auditoria')){
     const { data } = await sb.from('salud_auditoria').select('*').order('creado_en', {ascending:false}).limit(500);
@@ -1255,6 +1305,8 @@ async function cargarTodo(){
   renderAuditoria();
   renderAuditoriasCalidad();
   renderProtocolosClinicos();
+  renderDespachoFarmacia();
+  renderCatalogoCie10();
 }
 
 /* ---------------- DASHBOARD ---------------- */
@@ -1486,6 +1538,7 @@ function abrirModalHistorial(id){
       <div class="campo"><label>Temperatura (°C)</label><input id="hf-temp" placeholder="36.5" value="${h?.signos_vitales?.temperatura||''}"></div>
     </div>
     <div class="campo"><label>Diagnóstico</label><textarea id="hf-diagnostico" rows="2">${h?.diagnostico||''}</textarea></div>
+    ${campoCie10('hf', h?.diagnostico_cie10)}
     ${generarPanelApoyoClinico('hf')}
     <div class="campo"><label>Tratamiento</label><textarea id="hf-tratamiento" rows="2">${h?.tratamiento||''}</textarea></div>
     <div class="campo"><label>Receta (texto libre)</label><textarea id="hf-receta" rows="2">${h?.receta||''}</textarea></div>
@@ -1538,6 +1591,7 @@ async function guardarHistorial(id){
     paciente_id: document.getElementById('hf-paciente').value,
     doctor_id: usuarioActual.id,
     diagnostico: document.getElementById('hf-diagnostico').value.trim(),
+    diagnostico_cie10: document.getElementById('hf-cie10').value.trim(),
     tratamiento: document.getElementById('hf-tratamiento').value.trim(),
     receta: document.getElementById('hf-receta').value.trim(),
     observaciones: document.getElementById('hf-observaciones').value.trim(),
@@ -2003,6 +2057,146 @@ function generarBloqueProtocolosVerificados(termino){
   `;
 }
 
+/* ================= CATÁLOGO CIE-10 ================= */
+function campoCie10(prefijo, valorActual){
+  return `
+    <div class="campo"><label>Código CIE-10 (opcional)</label>
+      <div style="display:flex; gap:8px;">
+        <input id="${prefijo}-cie10" value="${valorActual||''}" placeholder="Ej: J18.9 - Neumonía, no especificada" style="flex:1;">
+        <button type="button" class="btn btn-fantasma" style="padding:8px 12px; font-size:12px;" onclick="buscarCie10Live('${prefijo}')">Buscar</button>
+      </div>
+      <div id="${prefijo}-cie10-resultados" style="margin-top:6px;"></div>
+    </div>
+  `;
+}
+
+async function buscarCie10Live(prefijo){
+  const input = document.getElementById(`${prefijo}-cie10`);
+  const cont = document.getElementById(`${prefijo}-cie10-resultados`);
+  const termino = input.value.trim();
+  if(termino.length < 3){ cont.innerHTML = '<p style="font-size:11.5px; color:var(--gris);">Escribe al menos 3 letras del diagnóstico o el código.</p>'; return; }
+  cont.innerHTML = '<p style="font-size:11.5px; color:var(--gris);">Buscando...</p>';
+  const { data, error } = await sb.from('salud_catalogo_cie10')
+    .select('codigo, descripcion')
+    .or(`descripcion.ilike.%${termino}%,codigo.ilike.%${termino}%`)
+    .eq('activo', true)
+    .order('codigo')
+    .limit(20);
+  if(error || !data || !data.length){
+    cont.innerHTML = '<p style="font-size:11.5px; color:var(--gris);">Sin resultados en el catálogo CIE-10.</p>';
+    return;
+  }
+  cont.innerHTML = `<div style="border:1px solid var(--linea); border-radius:8px; max-height:220px; overflow-y:auto;">
+    ${data.map(c=>`<div onclick="seleccionarCie10('${prefijo}','${c.codigo.replace(/'/g,"\\'")}','${c.descripcion.replace(/'/g,"\\'")}')" style="padding:8px 10px; font-size:12.5px; border-bottom:1px solid var(--linea); cursor:pointer;"><strong>${c.codigo}</strong> — ${c.descripcion}</div>`).join('')}
+  </div>`;
+}
+
+function seleccionarCie10(prefijo, codigo, descripcion){
+  document.getElementById(`${prefijo}-cie10`).value = `${codigo} - ${descripcion}`;
+  document.getElementById(`${prefijo}-cie10-resultados`).innerHTML = '';
+}
+
+let cie10ListaActual = [];
+
+async function renderCatalogoCie10(){
+  const tb = document.querySelector('#tabla-salud_catalogo_cie10 tbody');
+  if(!tb) return;
+  const filtro = (document.getElementById('buscar-cie10')?.value||'').trim();
+
+  if(!filtro){
+    tb.innerHTML = `<tr><td colspan="4" class="vacio">Escribe un código o parte de la descripción para buscar (el catálogo puede tener miles de entradas).</td></tr>`;
+    cie10ListaActual = [];
+    return;
+  }
+  tb.innerHTML = `<tr><td colspan="4" class="vacio">Buscando...</td></tr>`;
+  const { data, error } = await sb.from('salud_catalogo_cie10')
+    .select('*')
+    .or(`descripcion.ilike.%${filtro}%,codigo.ilike.%${filtro}%`)
+    .eq('activo', true)
+    .order('codigo')
+    .limit(200);
+  if(error){ tb.innerHTML = `<tr><td colspan="4" class="vacio">Error al buscar: ${error.message}</td></tr>`; return; }
+  cie10ListaActual = data || [];
+  tb.innerHTML = cie10ListaActual.length ? cie10ListaActual.map(c=>`
+    <tr>
+      <td class="font-mono"><strong>${c.codigo}</strong></td>
+      <td>${c.descripcion}</td>
+      <td>${c.categoria||'—'}</td>
+      <td>
+        <button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalCie10Directo('${c.id}')">Editar</button>
+        <button class="btn btn-peligro" style="padding:6px 10px; font-size:12px;" onclick="eliminarCie10('${c.id}')">Eliminar</button>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="4" class="vacio">Sin coincidencias (mostrando máximo 200 resultados por búsqueda).</td></tr>`;
+}
+
+function abrirModalCie10Directo(id){
+  const c = cie10ListaActual.find(x=>x.id===id);
+  if(!c) return;
+  abrirModalCie10(id, c);
+}
+
+function abrirModalCie10(id, objetoPrecargado){
+  const c = objetoPrecargado || null;
+  abrirModal(`
+    <h3>${c?'Editar código CIE-10':'Nuevo código CIE-10'}</h3>
+    <div class="grid-2">
+      <div class="campo"><label>Código</label><input id="cief-codigo" value="${c?.codigo||''}" placeholder="Ej: J18.9"></div>
+      <div class="campo"><label>Categoría</label><input id="cief-categoria" value="${c?.categoria||''}" placeholder="Ej: Respiratorio"></div>
+    </div>
+    <div class="campo"><label>Descripción</label><input id="cief-descripcion" value="${c?.descripcion||''}"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarCie10(${c?`'${c.id}'`:'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarCie10(id){
+  const registro = {
+    codigo: document.getElementById('cief-codigo').value.trim(),
+    descripcion: document.getElementById('cief-descripcion').value.trim(),
+    categoria: document.getElementById('cief-categoria').value.trim(),
+  };
+  if(!registro.codigo || !registro.descripcion){ mostrarToast('Código y descripción son obligatorios.'); return; }
+  const { error } = id ? await sb.from('salud_catalogo_cie10').update(registro).eq('id', id)
+                        : await sb.from('salud_catalogo_cie10').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria(id?'editar':'crear', 'catalogo_cie10', id, `${registro.codigo} — ${registro.descripcion}`);
+  cerrarModal(); mostrarToast('Código guardado.'); cargarTodo();
+}
+
+async function eliminarCie10(id){
+  if(!confirm('¿Eliminar este código del catálogo?')) return;
+  const { error } = await sb.from('salud_catalogo_cie10').delete().eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('eliminar', 'catalogo_cie10', id, '');
+  mostrarToast('Código eliminado.'); cargarTodo();
+}
+
+async function exportarCatalogoCie10Completo(){
+  mostrarToast('Preparando exportación completa, puede tardar un momento...');
+  let todos = [];
+  let desde = 0;
+  const TAMANO = 1000;
+  while(true){
+    const { data, error } = await sb.from('salud_catalogo_cie10').select('codigo, descripcion, categoria').eq('activo', true).order('codigo').range(desde, desde+TAMANO-1);
+    if(error){ mostrarToast('Error: '+error.message); return; }
+    if(!data || !data.length) break;
+    todos = todos.concat(data);
+    if(data.length < TAMANO) break;
+    desde += TAMANO;
+  }
+  if(!todos.length){ mostrarToast('El catálogo está vacío.'); return; }
+  const filas = todos.map(c=>({ Código:c.codigo, Descripción:c.descripcion, Categoría:c.categoria }));
+  const ws = XLSX.utils.json_to_sheet(filas);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'CIE-10'.slice(0,31));
+  XLSX.writeFile(wb, `catalogo_cie10_${new Date().toISOString().slice(0,10)}.xlsx`);
+  registrarAuditoria('exportar', 'catalogo_cie10', null, `Exportación completa: ${todos.length} códigos`);
+  mostrarToast(`Exportados ${todos.length} códigos.`);
+}
+
 function renderProtocolosClinicos(){
   const tb = document.querySelector('#tabla-salud_protocolos_clinicos tbody');
   if(!tb) return;
@@ -2090,21 +2284,82 @@ async function eliminarProtocolo(id){
 }
 
 
+/* ================= DESPACHO DE FARMACIA ================= */
+function ordenVencida(fechaOrden){
+  if(!fechaOrden) return true;
+  return (Date.now() - new Date(fechaOrden).getTime()) > 24*60*60*1000;
+}
+
+function calcularProximaDosis(medicamento){
+  if(!medicamento.frecuencia_horas) return null; // dosis única, no recurrente
+  const administraciones = (cache.salud_administraciones_medicamento||[])
+    .filter(a => a.orden_medicamento_id === medicamento.id)
+    .sort((a,b)=> new Date(b.fecha_administrada) - new Date(a.fecha_administrada));
+  const ultima = administraciones[0];
+  const base = ultima ? new Date(ultima.fecha_administrada) : new Date(medicamento.salud_ordenes_medicas?.fecha || medicamento.creado_en);
+  return new Date(base.getTime() + medicamento.frecuencia_horas*60*60*1000);
+}
+
+function renderDespachoFarmacia(){
+  const tb = document.querySelector('#tabla-despacho-farmacia tbody');
+  if(!tb) return;
+  const filtro = (document.getElementById('buscar-despacho')?.value||'').toLowerCase();
+
+  const lista = (cache.salud_orden_medicamentos||[])
+    .filter(m => m.salud_hospitalizaciones?.estado === 'activo')
+    .filter(m => (m.medicamento_texto||'').toLowerCase().includes(filtro) || (m.salud_hospitalizaciones?.salud_pacientes?.nombre||'').toLowerCase().includes(filtro))
+    .map(m => {
+      const vencida = ordenVencida(m.salud_ordenes_medicas?.fecha);
+      const proxima = calcularProximaDosis(m);
+      const vencidaDosis = proxima && proxima.getTime() < Date.now();
+      return { ...m, vencida, proxima, vencidaDosis };
+    })
+    .sort((a,b)=> (a.proxima?.getTime()||0) - (b.proxima?.getTime()||0));
+
+  tb.innerHTML = lista.length ? lista.map(m=>`
+    <tr>
+      <td>${m.salud_hospitalizaciones?.salud_pacientes?.nombre||'—'}<br><span style="font-size:11px; color:var(--gris);">Sala ${m.salud_hospitalizaciones?.sala||'—'}/Cama ${m.salud_hospitalizaciones?.cama||'—'}</span></td>
+      <td>${m.medicamento_texto}</td>
+      <td>${m.dosis||'—'} ${m.via?'· '+m.via:''}</td>
+      <td>${m.frecuencia_horas?'Cada '+m.frecuencia_horas+'h':'Dosis única'}</td>
+      <td>${m.vencida ? '<span class="pill pill-coral">🔒 Orden vencida</span>' : (m.proxima ? (m.vencidaDosis?'<span class="pill pill-coral">Atrasada — '+formatoHora(m.proxima)+'</span>':'<span class="pill pill-ambar">'+formatoHora(m.proxima)+'</span>') : '<span class="pill pill-gris">Dosis única</span>')}</td>
+      <td>${m.vencida
+          ? `<span style="font-size:11px; color:var(--gris);">Bloqueado — requiere orden nueva</span>`
+          : `<button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="registrarDespacho('${m.id}','${m.hospitalizacion_id}')">Registrar despacho</button>`}
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="6" class="vacio">Sin medicamentos activos para despachar.</td></tr>`;
+}
+
+async function registrarDespacho(ordenMedId, hospId){
+  const { error } = await sb.from('salud_administraciones_medicamento').insert({
+    orden_medicamento_id: ordenMedId, hospitalizacion_id: hospId, usuario_id: usuarioActual.id
+  });
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'despacho_farmacia', ordenMedId, 'Despacho/administración registrada');
+  mostrarToast('Despacho registrado.'); cargarTodo();
+}
+
 function renderHospitalizaciones(){
   const filtro = (document.getElementById('buscar-hospitalizacion')?.value||'').toLowerCase();
   const lista = (cache.salud_hospitalizaciones||[]).filter(h => (h.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
   const tb = document.querySelector('#tabla-salud_hospitalizaciones tbody');
   if(!tb) return;
-  tb.innerHTML = lista.length ? lista.map(h=>`
+  tb.innerHTML = lista.length ? lista.map(h=>{
+    const evolucionesHosp = (cache.ultimas_evoluciones||[]).filter(e=>e.hospitalizacion_id===h.id);
+    const ultimaFecha = evolucionesHosp.length ? evolucionesHosp[0].fecha : h.fecha_ingreso;
+    const evolucionVencida = h.estado==='activo' && ordenVencida(ultimaFecha);
+    return `
     <tr>
-      <td><strong>${h.salud_pacientes?.nombre||'—'}</strong></td>
+      <td><strong>${h.salud_pacientes?.nombre||'—'}</strong>${evolucionVencida?' <span class="pill pill-coral" title="Sin nota de evolución en 24h">⚠️ Evolución vencida</span>':''}</td>
       <td>${h.sala||'—'} / ${h.cama||'—'}</td>
       <td>${formatoHora(h.fecha_ingreso)}</td>
       <td>${h.diagnostico_presuntivo||'—'}</td>
       <td>${h.estado==='activo'?'<span class="pill pill-ambar">Activo</span>':h.estado==='egresado'?'<span class="pill pill-verde">Egresado</span>':'<span class="pill pill-gris">Fallecido</span>'}</td>
       <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verHospitalizacion('${h.id}')">Ver expediente</button></td>
     </tr>
-  `).join('') : `<tr><td colspan="6" class="vacio">Sin hospitalizaciones registradas.</td></tr>`;
+  `;
+  }).join('') : `<tr><td colspan="6" class="vacio">Sin hospitalizaciones registradas.</td></tr>`;
 }
 
 function abrirModalIngreso(){
@@ -2130,6 +2385,7 @@ function abrirModalIngreso(){
       <div class="campo"><label>Peso / Talla</label><input id="hif-peso-talla" placeholder="70kg / 170cm"></div>
     </div>
     <div class="campo"><label>Diagnóstico presuntivo</label><textarea id="hif-diagnostico" rows="2"></textarea></div>
+    ${campoCie10('hif')}
     ${generarPanelApoyoClinico('hif')}
     <div class="grid-2">
       <div class="campo"><label>Dieta</label><input id="hif-dieta"></div>
@@ -2159,6 +2415,7 @@ async function guardarIngreso(){
       spo2: document.getElementById('hif-spo2').value.trim(), peso_talla: document.getElementById('hif-peso-talla').value.trim(),
     },
     diagnostico_presuntivo: document.getElementById('hif-diagnostico').value.trim(),
+    diagnostico_presuntivo_cie10: document.getElementById('hif-cie10').value.trim(),
     dieta: document.getElementById('hif-dieta').value.trim(), plan_ingreso: document.getElementById('hif-plan').value.trim(),
   };
   const { error } = await sb.from('salud_hospitalizaciones').insert(registro);
@@ -2323,17 +2580,68 @@ async function guardarNotaEvolucion(hospId){
   mostrarToast('Nota agregada.'); verHospitalizacion(hospId, 'evoluciones');
 }
 
+let itemsMedicamentosOrdenTemp = [];
+
 function abrirModalOrdenMedica(hospId){
+  itemsMedicamentosOrdenTemp = [];
   abrirModal(`
     <h3>Nueva orden médica</h3>
-    <div class="campo"><label>Tratamiento (medicamentos y recomendaciones)</label><textarea id="omf-tratamiento" rows="2"></textarea></div>
+    <div class="campo"><label>Tratamiento (indicaciones generales)</label><textarea id="omf-tratamiento" rows="2"></textarea></div>
     <div class="campo"><label>Dieta</label><input id="omf-dieta"></div>
     <div class="campo"><label>Estudios indicados</label><textarea id="omf-estudios" rows="2"></textarea></div>
+
+    <hr style="border:none; border-top:1px solid var(--linea); margin:16px 0;">
+    <div class="campo"><label>Medicamentos de esta orden (para despacho de farmacia)</label>
+      <input id="omf-med-nombre" list="dl-medicamentos-orden" placeholder="Nombre del medicamento..." style="margin-bottom:6px;">
+      <datalist id="dl-medicamentos-orden">${cache.salud_productos.map(p=>`<option value="${p.nombre}">`).join('')}</datalist>
+      <div class="grid-2">
+        <input id="omf-med-dosis" placeholder="Dosis (ej: 500mg)">
+        <input id="omf-med-via" placeholder="Vía (oral, IV, IM...)">
+        <select id="omf-med-frecuencia">
+          <option value="4">Cada 4 horas</option>
+          <option value="6">Cada 6 horas</option>
+          <option value="8" selected>Cada 8 horas</option>
+          <option value="12">Cada 12 horas</option>
+          <option value="24">Cada 24 horas</option>
+          <option value="">Dosis única</option>
+        </select>
+        <button type="button" class="btn btn-fantasma" onclick="agregarMedicamentoOrden()">+ Agregar</button>
+      </div>
+    </div>
+    <div id="omf-lista-medicamentos" style="margin-bottom:10px;"></div>
+    <p style="font-size:11.5px; color:var(--gris);">Esta orden vence en 24 horas si no se renueva — pasado ese tiempo, farmacia no podrá seguir despachando estos medicamentos hasta que crees una orden nueva.</p>
+
     <div class="modal-acciones">
       <button class="btn btn-fantasma" onclick="verHospitalizacion('${hospId}','ordenes')">Cancelar</button>
       <button class="btn btn-primario" style="width:auto;" onclick="guardarOrdenMedica('${hospId}')">Guardar</button>
     </div>
   `);
+  renderMedicamentosOrdenTemp();
+}
+
+function agregarMedicamentoOrden(){
+  const nombre = document.getElementById('omf-med-nombre').value.trim();
+  if(!nombre) return;
+  const dosis = document.getElementById('omf-med-dosis').value.trim();
+  const via = document.getElementById('omf-med-via').value.trim();
+  const frecuencia_horas = document.getElementById('omf-med-frecuencia').value ? Number(document.getElementById('omf-med-frecuencia').value) : null;
+  const producto = cache.salud_productos.find(p=>p.nombre.toLowerCase()===nombre.toLowerCase());
+  itemsMedicamentosOrdenTemp.push({ medicamento_texto:nombre, producto_id:producto?.id||null, dosis, via, frecuencia_horas });
+  document.getElementById('omf-med-nombre').value = '';
+  document.getElementById('omf-med-dosis').value = '';
+  document.getElementById('omf-med-via').value = '';
+  renderMedicamentosOrdenTemp();
+}
+function quitarMedicamentoOrden(idx){ itemsMedicamentosOrdenTemp.splice(idx,1); renderMedicamentosOrdenTemp(); }
+function renderMedicamentosOrdenTemp(){
+  const cont = document.getElementById('omf-lista-medicamentos');
+  if(!cont) return;
+  cont.innerHTML = itemsMedicamentosOrdenTemp.length ? itemsMedicamentosOrdenTemp.map((m,idx)=>`
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--linea); font-size:13px;">
+      <span>${m.medicamento_texto} ${m.dosis?'— '+m.dosis:''} ${m.via?'('+m.via+')':''} — ${m.frecuencia_horas?'cada '+m.frecuencia_horas+'h':'dosis única'}</span>
+      <button type="button" onclick="quitarMedicamentoOrden(${idx})" style="background:none; border:none; color:var(--coral); cursor:pointer; font-size:15px;">×</button>
+    </div>
+  `).join('') : '<p style="font-size:12px; color:var(--gris);">Sin medicamentos agregados aún.</p>';
 }
 
 async function guardarOrdenMedica(hospId){
@@ -2343,9 +2651,18 @@ async function guardarOrdenMedica(hospId){
     dieta: document.getElementById('omf-dieta').value.trim(),
     estudios_indicados: document.getElementById('omf-estudios').value.trim(),
   };
-  const { error } = await sb.from('salud_ordenes_medicas').insert(registro);
+  const { data: ordenCreada, error } = await sb.from('salud_ordenes_medicas').insert(registro).select().single();
   if(error){ mostrarToast('Error: '+error.message); return; }
-  registrarAuditoria('crear', 'hospitalizacion', hospId, 'Orden médica');
+
+  if(itemsMedicamentosOrdenTemp.length){
+    const items = itemsMedicamentosOrdenTemp.map(m => ({
+      orden_id: ordenCreada.id, hospitalizacion_id: hospId, producto_id: m.producto_id,
+      medicamento_texto: m.medicamento_texto, dosis: m.dosis, via: m.via, frecuencia_horas: m.frecuencia_horas,
+    }));
+    await sb.from('salud_orden_medicamentos').insert(items);
+  }
+
+  registrarAuditoria('crear', 'hospitalizacion', hospId, `Orden médica${itemsMedicamentosOrdenTemp.length?' con '+itemsMedicamentosOrdenTemp.length+' medicamento(s)':''}`);
   mostrarToast('Orden agregada.'); verHospitalizacion(hospId, 'ordenes');
 }
 
@@ -2353,6 +2670,7 @@ function abrirModalEgreso(hospId){
   abrirModal(`
     <h3>Egreso / Epicrisis</h3>
     <div class="campo"><label>Diagnóstico definitivo</label><textarea id="egf-diagnostico" rows="2"></textarea></div>
+    ${campoCie10('egf')}
     <div class="campo"><label>Resumen de manejo durante el internamiento</label><textarea id="egf-resumen" rows="3"></textarea></div>
     <div class="campo"><label>Recomendaciones para manejo/tratamiento ambulatorio</label><textarea id="egf-recomendaciones" rows="2"></textarea></div>
     <div class="grid-2">
@@ -2370,6 +2688,7 @@ async function guardarEgreso(hospId){
   const registro = {
     estado:'egresado', fecha_egreso: new Date().toISOString(), medico_egreso_id: usuarioActual.id,
     diagnostico_definitivo: document.getElementById('egf-diagnostico').value.trim(),
+    diagnostico_definitivo_cie10: document.getElementById('egf-cie10').value.trim(),
     resumen_manejo: document.getElementById('egf-resumen').value.trim(),
     recomendaciones_egreso: document.getElementById('egf-recomendaciones').value.trim(),
     condicion_egreso: document.getElementById('egf-condicion').value.trim(),
@@ -2415,6 +2734,7 @@ function abrirModalEmergencia(){
     <div class="campo"><label>Motivo de la consulta</label><textarea id="emf-motivo" rows="2"></textarea></div>
     <div class="campo"><label>Interrogatorio, exploración física, estado mental/emocional</label><textarea id="emf-interrogatorio" rows="2"></textarea></div>
     <div class="campo"><label>Diagnóstico presuntivo</label><textarea id="emf-diagnostico" rows="2"></textarea></div>
+    ${campoCie10('emf')}
     ${generarPanelApoyoClinico('emf')}
     <div class="campo"><label>Tratamiento</label><textarea id="emf-tratamiento" rows="2"></textarea></div>
     <div class="campo"><label>Pronóstico</label><input id="emf-pronostico"></div>
@@ -2434,6 +2754,7 @@ async function guardarEmergencia(){
     motivo_consulta: document.getElementById('emf-motivo').value.trim(),
     resumen_interrogatorio: document.getElementById('emf-interrogatorio').value.trim(),
     diagnostico_presuntivo: document.getElementById('emf-diagnostico').value.trim(),
+    diagnostico_cie10: document.getElementById('emf-cie10').value.trim(),
     tratamiento: document.getElementById('emf-tratamiento').value.trim(),
     pronostico: document.getElementById('emf-pronostico').value.trim(),
   };
@@ -3450,7 +3771,7 @@ function imprimirReporteCompleto(){
 /* ============================================================
    MOTOR GENÉRICO — Excel, plantillas, selección, detalles, respaldo
    ============================================================ */
-const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', proveedores:'proveedores', compras:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria', hospitalizaciones:'hospitalizacion', imagenes:'imagenes', laboratorios:'laboratorio', consentimientos:'consentimientos', emergencias:'emergencias', notasEnfermeria:'enfermeria', auditoriasCalidad:'auditorias_calidad', protocolosClinicos:'protocolos_clinicos' };
+const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', proveedores:'proveedores', compras:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria', hospitalizaciones:'hospitalizacion', imagenes:'imagenes', laboratorios:'laboratorio', consentimientos:'consentimientos', emergencias:'emergencias', notasEnfermeria:'enfermeria', auditoriasCalidad:'auditorias_calidad', protocolosClinicos:'protocolos_clinicos', despacho_farmacia:'despacho_farmacia', catalogoCie10:'catalogo_cie10' };
 
 function filaParaExcel(modulo, row){
   switch(modulo){
@@ -3471,6 +3792,7 @@ function filaParaExcel(modulo, row){
     case 'notasEnfermeria': return {Fecha:row.fecha, Paciente:row.salud_hospitalizaciones?.salud_pacientes?.nombre||'', 'Enfermero/a':row.salud_usuarios?.nombre||'', Medicamento:row.medicamento_administrado, Dosis:row.dosis, Observaciones:row.observaciones};
     case 'auditoriasCalidad': return {Fecha:row.fecha, Auditor:row.salud_usuarios?.nombre||'', Tipo:row.tipo_objeto, 'Área/Paciente':row.area_evaluada||row.salud_pacientes?.nombre||'', Calificación:row.calificacion, Hallazgos:row.hallazgos, Recomendaciones:row.recomendaciones, Estado:row.estado};
     case 'protocolosClinicos': return {Condición:row.condicion, 'Situación clínica':row.situacion_clinica, 'Solución aplicada':row.solucion_aplicada, 'Medicamentos usados':row.medicamentos_usados, Resultado:row.resultado, Autor:row.autor?.nombre||'', Verificado:row.verificado?'Sí':'No'};
+    case 'catalogoCie10': return {Código:row.codigo, Descripción:row.descripcion, Categoría:row.categoria};
     default: return row;
   }
 }
@@ -3568,6 +3890,10 @@ async function prepararRegistroImportado(modulo, obj){
     if(!obj.condicion) return null;
     return { condicion:obj.condicion, situacion_clinica:obj.situacion_clinica, solucion_aplicada:obj.solucion_aplicada, medicamentos_usados:obj.medicamentos_usados, resultado:obj.resultado, notas:obj.notas, autor_id: usuarioActual.id, verificado:false };
   }
+  if(modulo==='catalogoCie10'){
+    if(!obj.codigo || !obj.descripcion) return null;
+    return { codigo:obj.codigo.trim(), descripcion:obj.descripcion, categoria:obj.categoria };
+  }
   return null;
 }
 
@@ -3579,17 +3905,32 @@ async function importarExcel(event, modulo){
   const wb = XLSX.read(datosBin, {type:'array'});
   const hoja = wb.Sheets[wb.SheetNames[0]];
   const filas = XLSX.utils.sheet_to_json(hoja, {header:1, raw:false});
-  const registros = filas.slice(1).filter(f=>f.some(v=>v!==undefined && v!==''));
+  const registrosCrudos = filas.slice(1).filter(f=>f.some(v=>v!==undefined && v!==''));
 
-  let insertados = 0, errores = 0;
-  for(const fila of registros){
+  mostrarToast(`Procesando ${registrosCrudos.length} fila(s)...`);
+
+  const registrosPreparados = [];
+  let errores = 0;
+  for(const fila of registrosCrudos){
     const obj = {};
     cfg.columnas.forEach((col,i)=>{ obj[col.clave] = fila[i]!==undefined ? String(fila[i]).trim() : ''; });
     const registroFinal = await prepararRegistroImportado(modulo, obj);
     if(!registroFinal){ errores++; continue; }
-    const { error } = await sb.from(cfg.tablaSb).insert(registroFinal);
-    if(error) errores++; else insertados++;
+    registrosPreparados.push(registroFinal);
   }
+
+  const TAMANO_LOTE = 500;
+  let insertados = 0;
+  for(let i=0; i<registrosPreparados.length; i+=TAMANO_LOTE){
+    const lote = registrosPreparados.slice(i, i+TAMANO_LOTE);
+    const { error } = await sb.from(cfg.tablaSb).insert(lote);
+    if(error){ errores += lote.length; }
+    else { insertados += lote.length; }
+    if(registrosPreparados.length > TAMANO_LOTE){
+      mostrarToast(`Importando... ${Math.min(i+TAMANO_LOTE, registrosPreparados.length)} de ${registrosPreparados.length}`);
+    }
+  }
+
   event.target.value = '';
   registrarAuditoria('importar', modulo, null, `${insertados} agregado(s), ${errores} con error — archivo: ${archivo.name}`);
   mostrarToast(`Importación completa: ${insertados} agregado(s), ${errores} con error.`);
