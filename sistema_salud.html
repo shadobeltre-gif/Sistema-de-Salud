@@ -736,6 +736,25 @@ tr:last-child td{border-bottom:none;}
       <p style="font-size:12px; color:var(--gris); margin-top:10px;">Se muestran las últimas 500 acciones registradas. El registro de auditoría no se puede editar ni eliminar desde la app.</p>
     </div>
 
+    <!-- PROTOCOLOS Y CASOS -->
+    <div class="vista" id="vista-protocolos_clinicos">
+      <div class="encabezado-vista">
+        <div><div class="eyebrow">Conocimiento propio del equipo</div><h2>Protocolos y Casos</h2></div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="buscador" id="buscar-protocolo" placeholder="Buscar condición..." oninput="renderProtocolosClinicos()">
+          <button class="btn btn-coral" onclick="abrirModalProtocolo()">+ Nuevo caso</button>
+        </div>
+      </div>
+      <p style="font-size:12.5px; color:var(--gris); margin:-8px 0 12px;">Aquí tu equipo médico registra casos resueltos: qué se hizo y qué resultado dio. Solo los marcados como "Verificado" aparecen en el panel de Apoyo Clínico de Historiales/Emergencias. Esta información la ingresa y valida tu propio personal — el sistema no genera ni confirma contenido clínico por sí mismo.</p>
+      <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="abrirExportar('protocolosClinicos')">⭳ Exportar</button>
+        <button class="btn btn-fantasma" onclick="imprimirModulo('protocolos_clinicos')">🖨 Imprimir</button>
+      </div>
+      <div class="panel tabla-wrap">
+        <table id="tabla-salud_protocolos_clinicos"><thead><tr><th>Condición</th><th>Autor</th><th>Fecha</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
     <!-- AUDITORÍAS DE CALIDAD -->
     <div class="vista" id="vista-auditorias_calidad">
       <div class="encabezado-vista">
@@ -874,23 +893,23 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
    ============================================================ */
 
 let usuarioActual = null;
-let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[], salud_proveedores:[], salud_compras:[], salud_solicitudes:[], salud_hospitalizaciones:[], salud_imagenes:[], salud_laboratorios:[], salud_consentimientos:[], salud_emergencias:[], salud_notas_enfermeria:[], salud_auditorias_calidad:[] };
+let cache = { salud_pacientes:[], salud_citas:[], salud_historiales:[], salud_productos:[], salud_facturas:[], salud_usuarios:[], salud_auditoria:[], salud_proveedores:[], salud_compras:[], salud_solicitudes:[], salud_hospitalizaciones:[], salud_imagenes:[], salud_laboratorios:[], salud_consentimientos:[], salud_emergencias:[], salud_notas_enfermeria:[], salud_auditorias_calidad:[], salud_protocolos_clinicos:[] };
 
 const TABS_POR_ROL = {
-  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','imagenes','laboratorio','consentimientos','inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria','auditorias_calidad','manual'],
-  doctor:       ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','consentimientos','manual'],
+  admin:        ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','imagenes','laboratorio','consentimientos','protocolos_clinicos','inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria','auditorias_calidad','manual'],
+  doctor:       ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','consentimientos','protocolos_clinicos','manual'],
   farmaceutico: ['dashboard','inventario','proveedores','facturacion','reportes','manual'],
   cajero:       ['dashboard','facturacion','manual'],
   enfermeria:   ['dashboard','salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria','manual'],
   laboratorio:  ['dashboard','salud_pacientes','salud_historiales','imagenes','laboratorio','manual'],
   admision:     ['dashboard','salud_pacientes','salud_citas','emergencias','hospitalizacion','manual'],
   seguros:      ['dashboard','facturacion','reportes','manual'],
-  auditor:      ['dashboard','salud_pacientes','salud_historiales','hospitalizacion','emergencias','imagenes','laboratorio','consentimientos','auditorias_calidad','auditoria','manual']
+  auditor:      ['dashboard','salud_pacientes','salud_historiales','hospitalizacion','emergencias','imagenes','laboratorio','consentimientos','protocolos_clinicos','auditorias_calidad','auditoria','manual']
 };
 const NOMBRE_TAB = {
   dashboard:'Panel', salud_pacientes:'Pacientes', salud_citas:'Citas', salud_historiales:'Historiales',
   emergencias:'Emergencias', hospitalizacion:'Hospitalización', enfermeria:'Enfermería', imagenes:'Imágenes', laboratorio:'Laboratorio', consentimientos:'Consentimientos',
-  inventario:'Inventario', proveedores:'Proveedores', facturacion:'Facturación', reportes:'Reportes', salud_usuarios:'Usuarios',
+  protocolos_clinicos:'Protocolos y Casos', inventario:'Inventario', proveedores:'Proveedores', facturacion:'Facturación', reportes:'Reportes', salud_usuarios:'Usuarios',
   auditoria:'Auditoría (bitácora)', auditorias_calidad:'Auditorías de calidad', manual:'Manual'
 };
 const MODULOS_PERMISO = [
@@ -903,6 +922,7 @@ const MODULOS_PERMISO = [
   {clave:'imagenes', etiqueta:'Imágenes diagnósticas'},
   {clave:'laboratorio', etiqueta:'Laboratorio'},
   {clave:'consentimientos', etiqueta:'Consentimientos informados'},
+  {clave:'protocolos_clinicos', etiqueta:'Protocolos y casos verificados'},
   {clave:'inventario', etiqueta:'Inventario'},
   {clave:'proveedores', etiqueta:'Proveedores'},
   {clave:'facturacion', etiqueta:'Facturación'},
@@ -915,7 +935,7 @@ const GRUPOS_MENU = [
   {clave:'clinica', nombre:'Atención Clínica', tabs:['salud_pacientes','salud_citas','salud_historiales','emergencias','hospitalizacion','enfermeria']},
   {clave:'servicios', nombre:'Servicios', tabs:['laboratorio','imagenes']},
   {clave:'documentos', nombre:'Documentos', tabs:['consentimientos']},
-  {clave:'calidad', nombre:'Calidad', tabs:['auditorias_calidad']},
+  {clave:'calidad', nombre:'Calidad', tabs:['protocolos_clinicos','auditorias_calidad']},
   {clave:'administracion', nombre:'Administración', tabs:['inventario','proveedores','facturacion','reportes','salud_usuarios','auditoria']},
 ];
 
@@ -1043,6 +1063,14 @@ const CONFIG_MODULOS = {
       {clave:'area_evaluada', etiqueta:'Área/Paciente'}, {clave:'calificacion', etiqueta:'Calificación'},
       {clave:'hallazgos', etiqueta:'Hallazgos'}, {clave:'recomendaciones', etiqueta:'Recomendaciones'}, {clave:'estado', etiqueta:'Estado'},
     ]
+  },
+  protocolosClinicos: {
+    tablaSb:'salud_protocolos_clinicos', cacheKey:'salud_protocolos_clinicos', titulo:'Protocolos y Casos', renderFn:()=>renderProtocolosClinicos(), soloExportar:true,
+    columnas:[
+      {clave:'condicion', etiqueta:'Condición'}, {clave:'situacion_clinica', etiqueta:'Situación clínica'}, {clave:'solucion_aplicada', etiqueta:'Solución aplicada'},
+      {clave:'medicamentos_usados', etiqueta:'Medicamentos usados'}, {clave:'resultado', etiqueta:'Resultado'},
+      {clave:'autor', etiqueta:'Autor'}, {clave:'verificado', etiqueta:'Verificado'},
+    ]
   }
 };
 let seleccionados = { pacientes:new Set(), citas:new Set(), historiales:new Set(), productos:new Set(), facturas:new Set(), usuarios:new Set(), proveedores:new Set() };
@@ -1163,7 +1191,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
 /* ---------------- CARGA DE DATOS ---------------- */
 async function cargarTodo(){
-  const [p, c, h, pr, f, u, prov, comp, sol, hosp, img, lab, cons, emer, enf] = await Promise.all([
+  const [p, c, h, pr, f, u, prov, comp, sol, hosp, img, lab, cons, emer, enf, prot] = await Promise.all([
     sb.from('salud_pacientes').select('*').order('nombre'),
     sb.from('salud_citas').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}),
     sb.from('salud_historiales').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}),
@@ -1178,7 +1206,8 @@ async function cargarTodo(){
     sb.from('salud_laboratorios').select('*, salud_pacientes(nombre), doctor:salud_usuarios!doctor_solicita_id(nombre), tecnico:salud_usuarios!tecnico_id(nombre)').order('fecha_solicitud', {ascending:false}).limit(300),
     sb.from('salud_consentimientos').select('*, salud_pacientes(nombre), salud_usuarios(nombre)').order('fecha', {ascending:false}).limit(300),
     sb.from('salud_emergencias').select('*, salud_pacientes(nombre)').order('fecha_atencion', {ascending:false}).limit(300),
-    sb.from('salud_notas_enfermeria').select('*, salud_usuarios(nombre), salud_hospitalizaciones(sala, cama, salud_pacientes(nombre))').order('fecha', {ascending:false}).limit(300)
+    sb.from('salud_notas_enfermeria').select('*, salud_usuarios(nombre), salud_hospitalizaciones(sala, cama, salud_pacientes(nombre))').order('fecha', {ascending:false}).limit(300),
+    sb.from('salud_protocolos_clinicos').select('*, autor:salud_usuarios!autor_id(nombre), verificador:salud_usuarios!verificado_por(nombre)').eq('activo', true).order('creado_en', {ascending:false}).limit(300)
   ]);
   cache.salud_pacientes = p.data || [];
   cache.salud_citas = c.data || [];
@@ -1195,6 +1224,7 @@ async function cargarTodo(){
   cache.salud_consentimientos = cons.data || [];
   cache.salud_emergencias = emer.data || [];
   cache.salud_notas_enfermeria = enf.data || [];
+  cache.salud_protocolos_clinicos = prot.data || [];
 
   if(usuarioActual && tabsDelUsuario().includes('auditoria')){
     const { data } = await sb.from('salud_auditoria').select('*').order('creado_en', {ascending:false}).limit(500);
@@ -1223,6 +1253,7 @@ async function cargarTodo(){
   renderUsuarios();
   renderAuditoria();
   renderAuditoriasCalidad();
+  renderProtocolosClinicos();
 }
 
 /* ---------------- DASHBOARD ---------------- */
@@ -1454,6 +1485,7 @@ function abrirModalHistorial(id){
       <div class="campo"><label>Temperatura (°C)</label><input id="hf-temp" placeholder="36.5" value="${h?.signos_vitales?.temperatura||''}"></div>
     </div>
     <div class="campo"><label>Diagnóstico</label><textarea id="hf-diagnostico" rows="2">${h?.diagnostico||''}</textarea></div>
+    ${generarPanelApoyoClinico('hf')}
     <div class="campo"><label>Tratamiento</label><textarea id="hf-tratamiento" rows="2">${h?.tratamiento||''}</textarea></div>
     <div class="campo"><label>Receta (texto libre)</label><textarea id="hf-receta" rows="2">${h?.receta||''}</textarea></div>
     <div class="campo"><label>Observaciones</label><textarea id="hf-observaciones" rows="2">${h?.observaciones||''}</textarea></div>
@@ -1777,6 +1809,286 @@ const ESTUDIOS_IMAGEN_COMUNES = ['Sonografía abdominal','Sonografía pélvica',
 const EXAMENES_LAB_COMUNES = ['Hemograma completo','Glicemia en ayunas','Perfil renal (BUN, creatinina)','Perfil hepático','Perfil lipídico','Electrolitos séricos','Examen de orina','Coproanálisis','Tiempo de protrombina (TP/INR)','PCR (proteína C reactiva)','VSG','Prueba de embarazo','Hemoglobina glicosilada (HbA1c)','TSH','Urocultivo','Hemocultivo','Prueba de VIH','Prueba de dengue','Prueba de COVID-19','Grupo sanguíneo y Rh'];
 const PROCEDIMIENTOS_CONSENTIMIENTO = ['Ingreso hospitalario','Cirugía mayor','Anestesia general','Salpingoclasia','Vasectomía','Trasplante','Investigación clínica en seres humanos','Necropsia hospitalaria','Transfusión sanguínea','Procedimiento de alto riesgo','Procedimiento de reproducción asistida','Otro procedimiento invasivo'];
 
+/* ============================================================
+   APOYO CLÍNICO DE REFERENCIA
+   Material educativo general (conocimiento clínico estándar), NO es
+   búsqueda en internet, NO es sugerencia diagnóstica ni de tratamiento
+   para un paciente específico. Es solo un recordatorio rápido de
+   diferenciales, estudios habituales y categorías de manejo — la
+   decisión clínica siempre es del médico tratante.
+   ============================================================ */
+const BASE_CONOCIMIENTO_CLINICO = [
+  { termino:'Fiebre', sinonimos:['fiebre','temperatura alta','hipertermia'],
+    diferenciales:['Infección viral', 'Infección bacteriana', 'Infección urinaria', 'Neumonía', 'Dengue/otras arbovirosis', 'Reacción a medicamento'],
+    estudios:['Hemograma completo', 'PCR', 'Examen de orina', 'Hemocultivo si persiste >48h o hay signos de gravedad', 'Radiografía de tórax si hay síntomas respiratorios'],
+    manejo:['Antipirético según protocolo local', 'Hidratación adecuada', 'Tratar la causa identificada', 'Vigilar signos de alarma'] },
+  { termino:'Dolor abdominal', sinonimos:['dolor abdominal','dolor de barriga','dolor de estómago'],
+    diferenciales:['Gastritis', 'Apendicitis', 'Colecistitis', 'Infección urinaria', 'Enfermedad pélvica inflamatoria', 'Estreñimiento', 'Cólico renal'],
+    estudios:['Hemograma', 'Examen de orina', 'Sonografía abdominal', 'Amilasa/lipasa si se sospecha pancreatitis', 'Prueba de embarazo en mujeres en edad fértil'],
+    manejo:['Analgesia según severidad y causa', 'Ayuno si se sospecha proceso quirúrgico', 'Referencia a cirugía si hay signos de abdomen agudo'] },
+  { termino:'Dolor torácico', sinonimos:['dolor torácico','dolor de pecho','dolor precordial'],
+    diferenciales:['Síndrome coronario agudo', 'Ansiedad/crisis de pánico', 'Reflujo gastroesofágico', 'Dolor musculoesquelético', 'Embolia pulmonar', 'Neumotórax'],
+    estudios:['Electrocardiograma inmediato', 'Troponina', 'Radiografía de tórax', 'Dímero D si se sospecha embolia'],
+    manejo:['Descartar causa cardíaca de forma prioritaria', 'Monitoreo continuo si hay signos de alarma', 'Referencia urgente si ECG anormal o troponina positiva'] },
+  { termino:'Cefalea', sinonimos:['cefalea','dolor de cabeza','migraña'],
+    diferenciales:['Cefalea tensional', 'Migraña', 'Hipertensión arterial', 'Sinusitis', 'Cefalea en racimos', 'Signos de alarma neurológica (descartar)'],
+    estudios:['Signos vitales incluyendo presión arterial', 'Examen neurológico', 'Tomografía si hay signos de alarma (déficit focal, inicio súbito severo, fiebre con rigidez de nuca)'],
+    manejo:['Analgesia según tipo de cefalea', 'Ambiente tranquilo y oscuro si es migraña', 'Referencia urgente si hay signos de alarma neurológica'] },
+  { termino:'Hipertensión arterial', sinonimos:['hipertension','presion alta','hipertensión arterial'],
+    diferenciales:['Hipertensión esencial', 'Hipertensión secundaria', 'Crisis hipertensiva', 'Preeclampsia si aplica embarazo'],
+    estudios:['Perfil renal', 'Electrolitos', 'Examen de orina', 'Electrocardiograma', 'Fondo de ojo si hay crisis'],
+    manejo:['Antihipertensivo según protocolo y comorbilidades', 'Cambios en estilo de vida', 'Manejo urgente si hay crisis hipertensiva con daño de órgano blanco'] },
+  { termino:'Diabetes mellitus', sinonimos:['diabetes','glicemia alta','hiperglicemia'],
+    diferenciales:['Diabetes tipo 2', 'Diabetes tipo 1', 'Diabetes gestacional si aplica', 'Estado hiperglicémico hiperosmolar', 'Cetoacidosis diabética'],
+    estudios:['Glicemia', 'Hemoglobina glicosilada', 'Perfil renal', 'Electrolitos', 'Cetonas si hay sospecha de cetoacidosis'],
+    manejo:['Manejo según tipo y severidad', 'Educación en estilo de vida', 'Referencia a endocrinología si es de difícil control'] },
+  { termino:'Neumonía', sinonimos:['neumonia','infección pulmonar','tos con fiebre'],
+    diferenciales:['Neumonía bacteriana', 'Neumonía viral', 'Bronquitis', 'Tuberculosis (si hay factores de riesgo)', 'COVID-19'],
+    estudios:['Radiografía de tórax', 'Hemograma', 'Saturación de oxígeno', 'PCR', 'Prueba de COVID-19 según protocolo'],
+    manejo:['Antibiótico según protocolo si se confirma origen bacteriano', 'Oxigenoterapia si hay hipoxemia', 'Hospitalización si hay criterios de gravedad'] },
+  { termino:'Asma / crisis asmática', sinonimos:['asma','crisis asmatica','dificultad para respirar','disnea'],
+    diferenciales:['Crisis asmática', 'EPOC exacerbado', 'Neumonía', 'Insuficiencia cardíaca', 'Embolia pulmonar'],
+    estudios:['Saturación de oxígeno', 'Peak flow si disponible', 'Radiografía de tórax si no responde a tratamiento inicial'],
+    manejo:['Broncodilatador según protocolo', 'Corticoide si crisis moderada-severa', 'Oxígeno si hay hipoxemia', 'Hospitalización si no responde'] },
+  { termino:'Infección urinaria', sinonimos:['infeccion urinaria','disuria','ardor al orinar','itu'],
+    diferenciales:['Cistitis', 'Pielonefritis', 'Uretritis', 'Vaginitis (diagnóstico diferencial en mujeres)'],
+    estudios:['Examen de orina', 'Urocultivo', 'Perfil renal si hay sospecha de pielonefritis'],
+    manejo:['Antibiótico según protocolo local y resultado de urocultivo', 'Hidratación adecuada', 'Referencia si hay signos de pielonefritis con compromiso sistémico'] },
+  { termino:'Diarrea aguda', sinonimos:['diarrea','gastroenteritis','deposiciones liquidas'],
+    diferenciales:['Gastroenteritis viral', 'Gastroenteritis bacteriana', 'Intoxicación alimentaria', 'Parasitosis'],
+    estudios:['Coproanálisis si persiste o hay signos de alarma', 'Electrolitos si hay deshidratación significativa'],
+    manejo:['Hidratación oral o IV según severidad', 'Antibiótico solo si está indicado por el cuadro', 'Vigilar signos de deshidratación'] },
+  { termino:'Dengue', sinonimos:['dengue','arbovirosis'],
+    diferenciales:['Dengue', 'Chikungunya', 'Zika', 'Otras causas de síndrome febril'],
+    estudios:['Hemograma con plaquetas', 'Prueba de dengue (NS1/serología)', 'Hematocrito seriado si hay signos de alarma'],
+    manejo:['Hidratación', 'Evitar AINEs (riesgo de sangrado)', 'Vigilar signos de alarma y criterios de hospitalización'] },
+  { termino:'Anemia', sinonimos:['anemia','palidez','hemoglobina baja'],
+    diferenciales:['Anemia ferropénica', 'Anemia por enfermedad crónica', 'Anemia hemolítica', 'Sangrado activo'],
+    estudios:['Hemograma completo', 'Ferritina', 'Perfil de hierro', 'Sangre oculta en heces si se sospecha sangrado digestivo'],
+    manejo:['Suplementación según tipo de anemia', 'Investigar y tratar la causa de fondo', 'Transfusión si hay compromiso hemodinámico'] },
+  { termino:'Convulsiones', sinonimos:['convulsion','crisis convulsiva','epilepsia'],
+    diferenciales:['Epilepsia', 'Convulsión febril (en niños)', 'Hipoglicemia', 'Trastorno metabólico', 'Causa estructural (requiere imagen)'],
+    estudios:['Glicemia inmediata', 'Electrolitos', 'Tomografía si es primer episodio o hay signos focales'],
+    manejo:['Protección de vía aérea durante el episodio', 'Manejo agudo según protocolo', 'Referencia a neurología para estudio si es primer episodio'] },
+  { termino:'Trauma craneoencefálico', sinonimos:['trauma craneoencefalico','golpe en la cabeza','tce'],
+    diferenciales:['TCE leve', 'TCE moderado/severo', 'Hematoma intracraneal (descartar)'],
+    estudios:['Escala de Glasgow', 'Tomografía de cráneo según criterios de riesgo'],
+    manejo:['Observación según severidad', 'Referencia urgente si hay deterioro neurológico o criterios de imagen'] },
+  { termino:'Fractura', sinonimos:['fractura','hueso roto','trauma de extremidad'],
+    diferenciales:['Fractura', 'Esguince', 'Contusión', 'Luxación'],
+    estudios:['Radiografía de la zona afectada'],
+    manejo:['Inmovilización', 'Analgesia', 'Referencia a ortopedia si hay desplazamiento o compromiso neurovascular'] },
+  { termino:'Apendicitis', sinonimos:['apendicitis','dolor en fosa iliaca derecha'],
+    diferenciales:['Apendicitis aguda', 'Enfermedad pélvica inflamatoria', 'Quiste ovárico complicado', 'Gastroenteritis'],
+    estudios:['Hemograma', 'PCR', 'Sonografía o tomografía abdominal'],
+    manejo:['Ayuno', 'Referencia a cirugía si hay sospecha razonable', 'Analgesia sin enmascarar el cuadro antes de evaluación quirúrgica'] },
+  { termino:'Sangrado en el embarazo', sinonimos:['sangrado en el embarazo','hemorragia obstetrica','sangrado embarazo'],
+    diferenciales:['Amenaza de aborto', 'Embarazo ectópico', 'Placenta previa', 'Desprendimiento de placenta'],
+    estudios:['Sonografía obstétrica', 'Grupo sanguíneo y Rh', 'Hemograma'],
+    manejo:['Evaluación obstétrica urgente', 'Estabilización hemodinámica si hay sangrado significativo', 'Referencia inmediata según hallazgos'] },
+  { termino:'Preeclampsia', sinonimos:['preeclampsia','presion alta en el embarazo'],
+    diferenciales:['Preeclampsia', 'Hipertensión gestacional', 'Hipertensión crónica'],
+    estudios:['Presión arterial seriada', 'Proteína en orina', 'Perfil hepático y renal', 'Conteo de plaquetas'],
+    manejo:['Referencia urgente a obstetricia', 'Vigilancia estrecha de signos de alarma (cefalea, visión borrosa, dolor epigástrico)'] },
+  { termino:'Celulitis / infección de piel', sinonimos:['celulitis','infeccion de piel','herida infectada'],
+    diferenciales:['Celulitis', 'Absceso', 'Erisipela', 'Dermatitis de contacto'],
+    estudios:['Hemograma si hay signos sistémicos', 'Cultivo de secreción si hay drenaje'],
+    manejo:['Antibiótico según protocolo', 'Drenaje si hay absceso', 'Elevación del área afectada'] },
+  { termino:'Faringitis', sinonimos:['faringitis','dolor de garganta','amigdalitis'],
+    diferenciales:['Faringitis viral', 'Faringitis estreptocócica', 'Mononucleosis'],
+    estudios:['Prueba rápida de estreptococo si está disponible', 'Hemograma si hay sospecha de mononucleosis'],
+    manejo:['Antibiótico solo si se confirma origen bacteriano', 'Analgesia/antipirético', 'Hidratación'] },
+  { termino:'Otitis media', sinonimos:['otitis','dolor de oido','infeccion de oido'],
+    diferenciales:['Otitis media aguda', 'Otitis externa', 'Otitis media con derrame'],
+    estudios:['Otoscopia'],
+    manejo:['Antibiótico según protocolo y edad', 'Analgesia', 'Seguimiento si no mejora'] },
+  { termino:'Insuficiencia cardíaca descompensada', sinonimos:['insuficiencia cardiaca','edema de piernas con disnea','falla cardiaca'],
+    diferenciales:['Insuficiencia cardíaca descompensada', 'Neumonía', 'Embolia pulmonar', 'Síndrome coronario agudo'],
+    estudios:['Radiografía de tórax', 'Electrocardiograma', 'Péptido natriurético (BNP) si disponible', 'Perfil renal y electrolitos'],
+    manejo:['Diurético según protocolo', 'Restricción de líquidos y sodio', 'Oxígeno si hay hipoxemia', 'Hospitalización según severidad'] },
+  { termino:'Reacción alérgica / anafilaxia', sinonimos:['alergia','reaccion alergica','anafilaxia','urticaria'],
+    diferenciales:['Reacción alérgica leve', 'Angioedema', 'Anafilaxia'],
+    estudios:['Evaluación clínica de vía aérea y signos vitales (prioridad sobre estudios)'],
+    manejo:['Epinefrina inmediata si hay signos de anafilaxia', 'Antihistamínico y corticoide según severidad', 'Observación tras estabilización'] },
+  { termino:'Intoxicación alimentaria', sinonimos:['intoxicacion alimentaria','comida en mal estado'],
+    diferenciales:['Intoxicación alimentaria', 'Gastroenteritis infecciosa', 'Reacción a toxina bacteriana'],
+    estudios:['Electrolitos si hay deshidratación', 'Coproanálisis si persiste'],
+    manejo:['Hidratación', 'Manejo sintomático', 'Vigilar signos de deshidratación severa'] },
+];
+
+function buscarApoyoClinico(prefijo){
+  const termino = (document.getElementById(prefijo+'-apoyo-input')?.value||'').toLowerCase().trim();
+  const cont = document.getElementById(prefijo+'-apoyo-resultado');
+  if(!cont) return;
+  if(!termino){ cont.innerHTML = ''; return; }
+  const coincidencias = BASE_CONOCIMIENTO_CLINICO.filter(item =>
+    item.termino.toLowerCase().includes(termino) || item.sinonimos.some(s=>s.includes(termino) || termino.includes(s))
+  );
+  const bloqueReferencia = coincidencias.length ? coincidencias.map(item => `
+    <div class="panel" style="background:#F3F7F5; border-color:#CFE0D8; margin-top:10px; padding:12px;">
+      <div style="font-weight:600; font-size:13.5px; margin-bottom:8px; color:var(--verde-boticario);">${item.termino}</div>
+      <div style="font-size:12.5px; margin-bottom:6px;"><strong>Diferenciales a considerar:</strong> ${item.diferenciales.join(', ')}</div>
+      <div style="font-size:12.5px; margin-bottom:6px;"><strong>Estudios habituales:</strong> ${item.estudios.join(', ')}</div>
+      <div style="font-size:12.5px;"><strong>Categorías generales de manejo:</strong> ${item.manejo.join(', ')}</div>
+    </div>
+  `).join('') + `<p style="font-size:11px; color:var(--gris); margin-top:8px;">⚠️ Referencia educativa general, no es diagnóstico ni prescripción. Confirma con guías oficiales y tu propio juicio clínico.</p>`
+    : `<p style="font-size:12.5px; color:var(--gris); margin-top:8px;">Sin coincidencias en la base de referencia general para "${termino}".</p>`;
+
+  cont.innerHTML = bloqueReferencia + generarBloquePrescripcionesPrevias(termino) + generarBloqueProtocolosVerificados(termino);
+}
+
+function generarBloquePrescripcionesPrevias(termino){
+  const registros = (cache.salud_historiales||[])
+    .filter(h => h.diagnostico && h.diagnostico.toLowerCase().includes(termino) && (h.tratamiento || h.receta))
+    .sort((a,b)=> new Date(b.fecha) - new Date(a.fecha))
+    .slice(0, 15);
+
+  if(!registros.length){
+    return `<p style="font-size:11.5px; color:var(--gris); margin-top:10px;">Aún no hay registros propios de este sistema con diagnósticos similares a "${termino}".</p>`;
+  }
+
+  const conteo = {};
+  registros.forEach(r=>{
+    const clave = (r.tratamiento || r.receta || '').trim();
+    if(clave) conteo[clave] = (conteo[clave]||0) + 1;
+  });
+  const resumen = Object.entries(conteo).sort((a,b)=>b[1]-a[1]).slice(0,6);
+
+  return `
+    <div class="panel" style="background:#EFF5FF; border-color:#C9DCF5; margin-top:10px; padding:12px;">
+      <div style="font-weight:600; font-size:13px; margin-bottom:8px; color:#1F5F9B;">🩺 Lo que ya se ha indicado antes en este sistema</div>
+      ${resumen.map(([trat,n])=>`<div style="font-size:12.5px; margin-bottom:5px;">• ${trat} <span style="color:var(--gris); font-size:11px;">(indicado ${n} vez${n>1?'es':''} por médicos de este sistema)</span></div>`).join('')}
+      <p style="font-size:11px; color:var(--gris); margin-top:8px;">Basado en ${registros.length} registro(s) reales de este sistema para diagnósticos que contienen "${termino}" — es un historial propio, no una recomendación externa. La decisión sigue siendo tuya.</p>
+    </div>
+  `;
+}
+
+function generarPanelApoyoClinico(prefijo){
+  const opciones = BASE_CONOCIMIENTO_CLINICO.map(i=>`<option value="${i.termino}">`).join('');
+  return `
+    <div class="panel" style="background:#FCF6EC; border-color:#EAD9AE; padding:12px; margin:14px 0;">
+      <div style="font-size:12px; font-weight:600; color:#8A5C13; margin-bottom:6px;">📚 Apoyo clínico de referencia</div>
+      <p style="font-size:11.5px; color:var(--gris); margin-bottom:10px;">Consulta rápida de conocimiento médico general — diferenciales, estudios habituales y categorías de manejo. <strong>No es una búsqueda en internet ni una sugerencia diagnóstica</strong>; la decisión clínica es siempre tuya.</p>
+      <div style="display:flex; gap:8px;">
+        <input id="${prefijo}-apoyo-input" list="dl-apoyo-clinico" placeholder="Ej: fiebre, dolor abdominal, hipertensión..." style="flex:1;">
+        <button type="button" class="btn btn-fantasma" style="padding:8px 12px; font-size:12px;" onclick="buscarApoyoClinico('${prefijo}')">Consultar</button>
+      </div>
+      <div id="${prefijo}-apoyo-resultado"></div>
+    </div>
+    <datalist id="dl-apoyo-clinico">${opciones}</datalist>
+  `;
+}
+
+/* ================= PROTOCOLOS Y CASOS CLÍNICOS (propios del equipo) ================= */
+function generarBloqueProtocolosVerificados(termino){
+  const protocolos = (cache.salud_protocolos_clinicos||[])
+    .filter(p => p.verificado && p.condicion.toLowerCase().includes(termino))
+    .slice(0, 8);
+  if(!protocolos.length) return '';
+  return `
+    <div class="panel" style="background:#EAF7EE; border-color:#B9E3C4; margin-top:10px; padding:12px;">
+      <div style="font-weight:600; font-size:13px; margin-bottom:8px; color:#1F7A3D;">✅ Casos verificados por tu equipo</div>
+      ${protocolos.map(p=>`
+        <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #CFE9D6;">
+          <div style="font-size:12.5px; font-weight:600;">${p.condicion}</div>
+          ${p.solucion_aplicada?`<div style="font-size:12px; margin-top:2px;"><strong>Solución:</strong> ${p.solucion_aplicada}</div>`:''}
+          ${p.medicamentos_usados?`<div style="font-size:12px;"><strong>Medicamentos:</strong> ${p.medicamentos_usados}</div>`:''}
+          ${p.resultado?`<div style="font-size:12px;"><strong>Resultado:</strong> ${p.resultado}</div>`:''}
+          <div style="font-size:10.5px; color:var(--gris); margin-top:3px;">Verificado por ${p.verificador?.nombre||'—'}</div>
+        </div>
+      `).join('')}
+      <p style="font-size:11px; color:var(--gris);">Registrado y verificado por tu propio equipo médico, no por este sistema.</p>
+    </div>
+  `;
+}
+
+function renderProtocolosClinicos(){
+  const tb = document.querySelector('#tabla-salud_protocolos_clinicos tbody');
+  if(!tb) return;
+  const filtro = (document.getElementById('buscar-protocolo')?.value||'').toLowerCase();
+  const lista = (cache.salud_protocolos_clinicos||[]).filter(p => p.condicion.toLowerCase().includes(filtro));
+  tb.innerHTML = lista.length ? lista.map(p=>`
+    <tr>
+      <td><strong>${p.condicion}</strong></td>
+      <td>${p.autor?.nombre||'—'}</td>
+      <td>${formatoHora(p.creado_en)}</td>
+      <td>${p.verificado?'<span class="pill pill-verde">Verificado</span>':'<span class="pill pill-ambar">Sin verificar</span>'}</td>
+      <td><button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="verProtocolo('${p.id}')">Ver</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="5" class="vacio">Sin casos registrados aún.</td></tr>`;
+}
+
+function abrirModalProtocolo(){
+  abrirModal(`
+    <h3>Nuevo caso / protocolo</h3>
+    <div class="campo"><label>Condición</label>
+      <input id="pcf-condicion" list="dl-apoyo-clinico" placeholder="Ej: Neumonía adquirida en comunidad">
+    </div>
+    <div class="campo"><label>Situación clínica (descripción del caso)</label><textarea id="pcf-situacion" rows="2"></textarea></div>
+    <div class="campo"><label>Solución aplicada</label><textarea id="pcf-solucion" rows="2"></textarea></div>
+    <div class="campo"><label>Medicamentos usados</label><input id="pcf-medicamentos"></div>
+    <div class="campo"><label>Resultado / desenlace</label><textarea id="pcf-resultado" rows="2"></textarea></div>
+    <div class="campo"><label>Notas adicionales</label><textarea id="pcf-notas" rows="2"></textarea></div>
+    <p style="font-size:11.5px; color:var(--gris);">Quedará como "Sin verificar" hasta que un médico lo confirme desde el detalle del caso.</p>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primario" style="width:auto;" onclick="guardarProtocolo()">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarProtocolo(){
+  const registro = {
+    condicion: document.getElementById('pcf-condicion').value.trim(),
+    situacion_clinica: document.getElementById('pcf-situacion').value.trim(),
+    solucion_aplicada: document.getElementById('pcf-solucion').value.trim(),
+    medicamentos_usados: document.getElementById('pcf-medicamentos').value.trim(),
+    resultado: document.getElementById('pcf-resultado').value.trim(),
+    notas: document.getElementById('pcf-notas').value.trim(),
+    autor_id: usuarioActual.id,
+  };
+  if(!registro.condicion){ mostrarToast('La condición es obligatoria.'); return; }
+  const { error } = await sb.from('salud_protocolos_clinicos').insert(registro);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('crear', 'protocolos_clinicos', null, registro.condicion);
+  cerrarModal(); mostrarToast('Caso guardado.'); cargarTodo();
+}
+
+function verProtocolo(id){
+  const p = cache.salud_protocolos_clinicos.find(x=>x.id===id);
+  if(!p) return;
+  abrirModal(`
+    <h3>${p.condicion}</h3>
+    <p style="font-size:11.5px; color:var(--gris); margin-bottom:12px;">Registrado por ${p.autor?.nombre||'—'} el ${formatoHora(p.creado_en)} · ${p.verificado?'<span class="pill pill-verde">Verificado por '+(p.verificador?.nombre||'')+'</span>':'<span class="pill pill-ambar">Sin verificar</span>'}</p>
+    <div class="detalle-fila"><span class="etiqueta-d">Situación clínica</span><span class="valor-d">${p.situacion_clinica||'—'}</span></div>
+    <div class="detalle-fila"><span class="etiqueta-d">Solución aplicada</span><span class="valor-d">${p.solucion_aplicada||'—'}</span></div>
+    <div class="detalle-fila"><span class="etiqueta-d">Medicamentos usados</span><span class="valor-d">${p.medicamentos_usados||'—'}</span></div>
+    <div class="detalle-fila"><span class="etiqueta-d">Resultado</span><span class="valor-d">${p.resultado||'—'}</span></div>
+    <div class="detalle-fila"><span class="etiqueta-d">Notas</span><span class="valor-d">${p.notas||'—'}</span></div>
+    <div class="modal-acciones">
+      <button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button>
+      <button class="btn btn-peligro" onclick="eliminarProtocolo('${p.id}')">Eliminar</button>
+      ${!p.verificado ? `<button class="btn btn-primario" style="width:auto;" onclick="verificarProtocolo('${p.id}')">Marcar como verificado</button>` : ''}
+    </div>
+  `);
+}
+
+async function verificarProtocolo(id){
+  const { error } = await sb.from('salud_protocolos_clinicos').update({ verificado:true, verificado_por: usuarioActual.id, fecha_verificacion: new Date().toISOString() }).eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('editar', 'protocolos_clinicos', id, 'Marcado como verificado');
+  cerrarModal(); mostrarToast('Caso verificado — ya aparece en el panel de apoyo clínico.'); cargarTodo();
+}
+
+async function eliminarProtocolo(id){
+  if(!confirm('¿Eliminar este caso/protocolo?')) return;
+  const { error } = await sb.from('salud_protocolos_clinicos').update({ activo:false }).eq('id', id);
+  if(error){ mostrarToast('Error: '+error.message); return; }
+  registrarAuditoria('eliminar', 'protocolos_clinicos', id, '');
+  cerrarModal(); mostrarToast('Caso eliminado.'); cargarTodo();
+}
+
+
 function renderHospitalizaciones(){
   const filtro = (document.getElementById('buscar-hospitalizacion')?.value||'').toLowerCase();
   const lista = (cache.salud_hospitalizaciones||[]).filter(h => (h.salud_pacientes?.nombre||'').toLowerCase().includes(filtro));
@@ -1817,6 +2129,7 @@ function abrirModalIngreso(){
       <div class="campo"><label>Peso / Talla</label><input id="hif-peso-talla" placeholder="70kg / 170cm"></div>
     </div>
     <div class="campo"><label>Diagnóstico presuntivo</label><textarea id="hif-diagnostico" rows="2"></textarea></div>
+    ${generarPanelApoyoClinico('hif')}
     <div class="grid-2">
       <div class="campo"><label>Dieta</label><input id="hif-dieta"></div>
       <div class="campo"><label>Plan de ingreso</label><input id="hif-plan"></div>
@@ -2101,6 +2414,7 @@ function abrirModalEmergencia(){
     <div class="campo"><label>Motivo de la consulta</label><textarea id="emf-motivo" rows="2"></textarea></div>
     <div class="campo"><label>Interrogatorio, exploración física, estado mental/emocional</label><textarea id="emf-interrogatorio" rows="2"></textarea></div>
     <div class="campo"><label>Diagnóstico presuntivo</label><textarea id="emf-diagnostico" rows="2"></textarea></div>
+    ${generarPanelApoyoClinico('emf')}
     <div class="campo"><label>Tratamiento</label><textarea id="emf-tratamiento" rows="2"></textarea></div>
     <div class="campo"><label>Pronóstico</label><input id="emf-pronostico"></div>
     <div class="modal-acciones">
@@ -3135,7 +3449,7 @@ function imprimirReporteCompleto(){
 /* ============================================================
    MOTOR GENÉRICO — Excel, plantillas, selección, detalles, respaldo
    ============================================================ */
-const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', proveedores:'proveedores', compras:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria', hospitalizaciones:'hospitalizacion', imagenes:'imagenes', laboratorios:'laboratorio', consentimientos:'consentimientos', emergencias:'emergencias', notasEnfermeria:'enfermeria', auditoriasCalidad:'auditorias_calidad' };
+const MODULO_A_TAB = { pacientes:'salud_pacientes', citas:'salud_citas', historiales:'salud_historiales', productos:'inventario', proveedores:'proveedores', compras:'inventario', facturas:'facturacion', usuarios:'salud_usuarios', auditoria:'auditoria', hospitalizaciones:'hospitalizacion', imagenes:'imagenes', laboratorios:'laboratorio', consentimientos:'consentimientos', emergencias:'emergencias', notasEnfermeria:'enfermeria', auditoriasCalidad:'auditorias_calidad', protocolosClinicos:'protocolos_clinicos' };
 
 function filaParaExcel(modulo, row){
   switch(modulo){
@@ -3155,6 +3469,7 @@ function filaParaExcel(modulo, row){
     case 'emergencias': return {Paciente:row.salud_pacientes?.nombre||'', Fecha:row.fecha_atencion, Motivo:row.motivo_consulta, 'Diagnóstico':row.diagnostico_presuntivo, Tratamiento:row.tratamiento, Desenlace:row.desenlace, Estado:row.estado};
     case 'notasEnfermeria': return {Fecha:row.fecha, Paciente:row.salud_hospitalizaciones?.salud_pacientes?.nombre||'', 'Enfermero/a':row.salud_usuarios?.nombre||'', Medicamento:row.medicamento_administrado, Dosis:row.dosis, Observaciones:row.observaciones};
     case 'auditoriasCalidad': return {Fecha:row.fecha, Auditor:row.salud_usuarios?.nombre||'', Tipo:row.tipo_objeto, 'Área/Paciente':row.area_evaluada||row.salud_pacientes?.nombre||'', Calificación:row.calificacion, Hallazgos:row.hallazgos, Recomendaciones:row.recomendaciones, Estado:row.estado};
+    case 'protocolosClinicos': return {Condición:row.condicion, 'Situación clínica':row.situacion_clinica, 'Solución aplicada':row.solucion_aplicada, 'Medicamentos usados':row.medicamentos_usados, Resultado:row.resultado, Autor:row.autor?.nombre||'', Verificado:row.verificado?'Sí':'No'};
     default: return row;
   }
 }
