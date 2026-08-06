@@ -747,6 +747,8 @@ tr:last-child td{border-bottom:none;}
       </div>
       <p style="font-size:12.5px; color:var(--gris); margin:-8px 0 12px;">Aquí tu equipo médico registra casos resueltos: qué se hizo y qué resultado dio. Solo los marcados como "Verificado" aparecen en el panel de Apoyo Clínico de Historiales/Emergencias. Esta información la ingresa y valida tu propio personal — el sistema no genera ni confirma contenido clínico por sí mismo.</p>
       <div class="toolbar-modulo">
+        <button class="btn btn-fantasma" onclick="descargarPlantilla('protocolosClinicos')">⭳ Plantilla Excel</button>
+        <label class="btn btn-fantasma">⭱ Importar Excel<input type="file" class="input-file-oculto" accept=".xlsx,.xls" onchange="importarExcel(event,'protocolosClinicos')"></label>
         <button class="btn btn-fantasma" onclick="abrirExportar('protocolosClinicos')">⭳ Exportar</button>
         <button class="btn btn-fantasma" onclick="imprimirModulo('protocolos_clinicos')">🖨 Imprimir</button>
       </div>
@@ -1065,11 +1067,10 @@ const CONFIG_MODULOS = {
     ]
   },
   protocolosClinicos: {
-    tablaSb:'salud_protocolos_clinicos', cacheKey:'salud_protocolos_clinicos', titulo:'Protocolos y Casos', renderFn:()=>renderProtocolosClinicos(), soloExportar:true,
+    tablaSb:'salud_protocolos_clinicos', cacheKey:'salud_protocolos_clinicos', titulo:'Protocolos y Casos', renderFn:()=>renderProtocolosClinicos(),
     columnas:[
-      {clave:'condicion', etiqueta:'Condición'}, {clave:'situacion_clinica', etiqueta:'Situación clínica'}, {clave:'solucion_aplicada', etiqueta:'Solución aplicada'},
-      {clave:'medicamentos_usados', etiqueta:'Medicamentos usados'}, {clave:'resultado', etiqueta:'Resultado'},
-      {clave:'autor', etiqueta:'Autor'}, {clave:'verificado', etiqueta:'Verificado'},
+      {clave:'condicion', etiqueta:'Condición (obligatorio)'}, {clave:'situacion_clinica', etiqueta:'Situación clínica'}, {clave:'solucion_aplicada', etiqueta:'Solución aplicada'},
+      {clave:'medicamentos_usados', etiqueta:'Medicamentos usados'}, {clave:'resultado', etiqueta:'Resultado'}, {clave:'notas', etiqueta:'Notas adicionales'},
     ]
   }
 };
@@ -3562,6 +3563,10 @@ async function prepararRegistroImportado(modulo, obj){
   if(modulo==='proveedores'){
     if(!obj.nombre) return null;
     return { nombre:obj.nombre, categoria:obj.categoria, contacto:obj.contacto, telefono:obj.telefono, email:obj.email, direccion:obj.direccion };
+  }
+  if(modulo==='protocolosClinicos'){
+    if(!obj.condicion) return null;
+    return { condicion:obj.condicion, situacion_clinica:obj.situacion_clinica, solucion_aplicada:obj.solucion_aplicada, medicamentos_usados:obj.medicamentos_usados, resultado:obj.resultado, notas:obj.notas, autor_id: usuarioActual.id, verificado:false };
   }
   return null;
 }
