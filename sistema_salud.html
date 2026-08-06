@@ -1853,41 +1853,126 @@ async function guardarIngreso(){
   cerrarModal(); mostrarToast('Ingreso registrado.'); cargarTodo();
 }
 
-async function verHospitalizacion(id){
+let expedienteTemp = null;
+
+async function verHospitalizacion(id, subvistaInicial){
   const h = cache.salud_hospitalizaciones.find(x=>x.id===id);
   if(!h) return;
-  const [{data:evoluciones}, {data:ordenes}, {data:enfermeria}] = await Promise.all([
+  const [{data:evoluciones}, {data:ordenes}, {data:enfermeria}, {data:imagenes}, {data:laboratorios}, {data:consentimientos}] = await Promise.all([
     sb.from('salud_notas_evolucion').select('*, salud_usuarios(nombre)').eq('hospitalizacion_id', id).order('fecha', {ascending:false}),
     sb.from('salud_ordenes_medicas').select('*, salud_usuarios(nombre)').eq('hospitalizacion_id', id).order('fecha', {ascending:false}),
     sb.from('salud_notas_enfermeria').select('*, salud_usuarios(nombre)').eq('hospitalizacion_id', id).order('fecha', {ascending:false}),
+    sb.from('salud_imagenes').select('*, doctor:salud_usuarios!doctor_solicita_id(nombre)').eq('hospitalizacion_id', id).order('fecha_solicitud', {ascending:false}),
+    sb.from('salud_laboratorios').select('*, doctor:salud_usuarios!doctor_solicita_id(nombre)').eq('hospitalizacion_id', id).order('fecha_solicitud', {ascending:false}),
+    sb.from('salud_consentimientos').select('*, salud_usuarios(nombre)').eq('hospitalizacion_id', id).order('fecha', {ascending:false}),
   ]);
+  expedienteTemp = { hospitalizacion:h, evoluciones:evoluciones||[], ordenes:ordenes||[], enfermeria:enfermeria||[], imagenes:imagenes||[], laboratorios:laboratorios||[], consentimientos:consentimientos||[] };
+  mostrarExpediente(subvistaInicial || 'historia');
+}
+
+const PESTANAS_EXPEDIENTE = [
+  {clave:'historia', nombre:'Historia Clínica'},
+  {clave:'ordenes', nombre:'Órdenes Médicas'},
+  {clave:'evoluciones', nombre:'Evoluciones'},
+  {clave:'enfermeria', nombre:'Enfermería'},
+  {clave:'estudios', nombre:'Estudios'},
+  {clave:'consentimientos', nombre:'Consentimientos'},
+  {clave:'egreso', nombre:'Egreso'},
+];
+
+function mostrarExpediente(sub){
+  const h = expedienteTemp?.hospitalizacion;
+  if(!h) return;
+  const tabsHtml = PESTANAS_EXPEDIENTE.map(t=>
+    `<button class="btn ${sub===t.clave?'btn-primario':'btn-fantasma'}" style="padding:6px 10px; font-size:11px;" onclick="mostrarExpediente('${t.clave}')">${t.clave==='egreso' && h.estado!=='activo' ? 'Epicrisis' : t.nombre}</button>`
+  ).join('');
+
+  let contenido = '';
+
+  if(sub==='historia'){
+    contenido = `
+      <div class="detalle-fila"><span class="etiqueta-d">Motivo de ingreso</span><span class="valor-d">${h.motivo_ingreso||'—'}</span></div>
+      <div class="detalle-fila"><span class="etiqueta-d">Historia de la enfermedad actual</span><span class="valor-d">${h.historia_enfermedad_actual||'—'}</span></div>
+      <div class="detalle-fila"><span class="etiqueta-d">Anamnesis</span><span class="valor-d">${h.anamnesis||'—'}</span></div>
+      <div class="detalle-fila"><span class="etiqueta-d">Examen físico</span><span class="valor-d">${h.examen_fisico||'—'}</span></div>
+      <div class="detalle-fila"><span class="etiqueta-d">Signos vitales de ingreso</span><span class="valor-d">${h.signos_vitales_ingreso ? Object.values(h.signos_vitales_ingreso).filter(Boolean).join(' · ') : '—'}</span></div>
+      <div class="detalle-fila"><span class="etiqueta-d">Diagnóstico presuntivo</span><span class="valor-d">${h.diagnostico_presuntivo||'—'}</span></div>
+      <div class="detalle-fila"><span class="etiqueta-d">Dieta / Plan de ingreso</span><span class="valor-d">${h.dieta||'—'} / ${h.plan_ingreso||'—'}</span></div>
+    `;
+  }
+
+  if(sub==='ordenes'){
+    contenido = `
+      <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+        ${h.estado==='activo' ? `<button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalOrdenMedica('${h.id}')">+ Nueva orden</button>` : ''}
+      </div>
+      ${expedienteTemp.ordenes.map(o=>`
+        <div class="detalle-fila"><span class="etiqueta-d">${formatoHora(o.fecha)} — ${o.salud_usuarios?.nombre||''}</span><span class="valor-d">${o.tratamiento||'—'}${o.dieta?' · Dieta: '+o.dieta:''}${o.estudios_indicados?' · Estudios: '+o.estudios_indicados:''}</span></div>
+      `).join('') || '<p style="font-size:12px; color:var(--gris);">Sin órdenes registradas.</p>'}
+    `;
+  }
+
+  if(sub==='evoluciones'){
+    contenido = `
+      <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+        ${h.estado==='activo' ? `<button class="btn btn-fantasma" style="padding:6px 10px; font-size:12px;" onclick="abrirModalNotaEvolucion('${h.id}')">+ Nueva nota</button>` : ''}
+      </div>
+      ${expedienteTemp.evoluciones.map(e=>`
+        <div class="detalle-fila"><span class="etiqueta-d">${formatoHora(e.fecha)} — ${e.salud_usuarios?.nombre||''}</span><span class="valor-d">${e.resumen_estado||'—'}${e.plan_manejo?' · Plan: '+e.plan_manejo:''}</span></div>
+      `).join('') || '<p style="font-size:12px; color:var(--gris);">Sin notas de evolución registradas.</p>'}
+    `;
+  }
+
+  if(sub==='enfermeria'){
+    contenido = `
+      <p style="font-size:11.5px; color:var(--gris); margin-bottom:10px;">Para agregar una nota nueva, usa el módulo Enfermería (dentro de Atención Clínica).</p>
+      ${expedienteTemp.enfermeria.map(n=>`
+        <div class="detalle-fila"><span class="etiqueta-d">${formatoHora(n.fecha)} — ${n.salud_usuarios?.nombre||''}</span><span class="valor-d">${n.medicamento_administrado?n.medicamento_administrado+' · ':''}${n.observaciones||'—'}</span></div>
+      `).join('') || '<p style="font-size:12px; color:var(--gris);">Sin notas de enfermería registradas.</p>'}
+    `;
+  }
+
+  if(sub==='estudios'){
+    contenido = `
+      <p style="font-size:11.5px; color:var(--gris); margin-bottom:10px;">Para solicitar un estudio nuevo, usa los módulos Imágenes o Laboratorio (dentro de Servicios).</p>
+      <div style="font-weight:600; font-size:12.5px; margin-bottom:6px;">Imágenes</div>
+      ${expedienteTemp.imagenes.map(i=>`<div class="detalle-fila"><span class="etiqueta-d">${i.estudio_especifico||i.tipo_estudio}</span><span class="valor-d">${pillEstado(i.estado)}</span></div>`).join('') || '<p style="font-size:12px; color:var(--gris);">Ninguna.</p>'}
+      <div style="font-weight:600; font-size:12.5px; margin:12px 0 6px;">Laboratorio</div>
+      ${expedienteTemp.laboratorios.map(l=>`<div class="detalle-fila"><span class="etiqueta-d">${l.examenes_solicitados}</span><span class="valor-d">${pillEstado(l.estado)}</span></div>`).join('') || '<p style="font-size:12px; color:var(--gris);">Ninguno.</p>'}
+    `;
+  }
+
+  if(sub==='consentimientos'){
+    contenido = `
+      <p style="font-size:11.5px; color:var(--gris); margin-bottom:10px;">Para agregar uno nuevo, usa el módulo Consentimientos (dentro de Documentos).</p>
+      ${expedienteTemp.consentimientos.map(c=>`<div class="detalle-fila"><span class="etiqueta-d">${c.tipo_procedimiento}</span><span class="valor-d">${formatoHora(c.fecha)}</span></div>`).join('') || '<p style="font-size:12px; color:var(--gris);">Ninguno registrado para este ingreso.</p>'}
+    `;
+  }
+
+  if(sub==='egreso'){
+    if(h.estado==='activo'){
+      contenido = `
+        <p style="font-size:13px; color:var(--gris); margin-bottom:14px;">El paciente sigue activo. Al dar de alta se completa la epicrisis.</p>
+        <button class="btn btn-coral" onclick="abrirModalEgreso('${h.id}')">Dar de alta (registrar egreso)</button>
+      `;
+    } else {
+      contenido = `
+        <div class="detalle-fila"><span class="etiqueta-d">Fecha de egreso</span><span class="valor-d">${formatoHora(h.fecha_egreso)}</span></div>
+        <div class="detalle-fila"><span class="etiqueta-d">Diagnóstico definitivo</span><span class="valor-d">${h.diagnostico_definitivo||'—'}</span></div>
+        <div class="detalle-fila"><span class="etiqueta-d">Resumen de manejo</span><span class="valor-d">${h.resumen_manejo||'—'}</span></div>
+        <div class="detalle-fila"><span class="etiqueta-d">Recomendaciones</span><span class="valor-d">${h.recomendaciones_egreso||'—'}</span></div>
+        <div class="detalle-fila"><span class="etiqueta-d">Condición de egreso</span><span class="valor-d">${h.condicion_egreso||'—'}</span></div>
+        <div class="detalle-fila"><span class="etiqueta-d">Fecha de seguimiento</span><span class="valor-d">${h.fecha_seguimiento||'—'}</span></div>
+      `;
+    }
+  }
+
   abrirModal(`
-    <h3>Expediente — ${h.salud_pacientes?.nombre||''}</h3>
-    <p style="font-size:11.5px; color:var(--gris); margin-bottom:14px;">${h.numero_expediente} · Sala ${h.sala||'—'} / Cama ${h.cama||'—'} · Ingreso: ${formatoHora(h.fecha_ingreso)} · ${h.estado==='activo'?'<span class="pill pill-ambar">Activo</span>':'<span class="pill pill-verde">Egresado</span>'}</p>
-    <div class="detalle-fila"><span class="etiqueta-d">Motivo</span><span class="valor-d">${h.motivo_ingreso||'—'}</span></div>
-    <div class="detalle-fila"><span class="etiqueta-d">Diagnóstico presuntivo</span><span class="valor-d">${h.diagnostico_presuntivo||'—'}</span></div>
-    ${h.estado!=='activo' ? `<div class="detalle-fila"><span class="etiqueta-d">Diagnóstico definitivo</span><span class="valor-d">${h.diagnostico_definitivo||'—'}</span></div>` : ''}
-
-    <hr style="border:none; border-top:1px solid var(--linea); margin:16px 0;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-      <strong style="font-size:13px;">Notas de evolución</strong>
-      <button class="btn btn-fantasma" style="padding:5px 9px; font-size:11.5px;" onclick="abrirModalNotaEvolucion('${id}')">+ Agregar</button>
-    </div>
-    ${(evoluciones||[]).map(e=>`<div class="detalle-fila"><span class="etiqueta-d">${formatoHora(e.fecha)} — ${e.salud_usuarios?.nombre||''}</span><span class="valor-d">${e.resumen_estado||'—'}</span></div>`).join('') || '<p style="font-size:12px; color:var(--gris);">Sin notas aún.</p>'}
-
-    <div style="display:flex; justify-content:space-between; align-items:center; margin:16px 0 8px;">
-      <strong style="font-size:13px;">Órdenes médicas</strong>
-      <button class="btn btn-fantasma" style="padding:5px 9px; font-size:11.5px;" onclick="abrirModalOrdenMedica('${id}')">+ Agregar</button>
-    </div>
-    ${(ordenes||[]).map(o=>`<div class="detalle-fila"><span class="etiqueta-d">${formatoHora(o.fecha)} — ${o.salud_usuarios?.nombre||''}</span><span class="valor-d">${o.tratamiento||'—'}</span></div>`).join('') || '<p style="font-size:12px; color:var(--gris);">Sin órdenes aún.</p>'}
-
-    <div style="margin:16px 0 8px;"><strong style="font-size:13px;">Notas de enfermería</strong></div>
-    ${(enfermeria||[]).map(n=>`<div class="detalle-fila"><span class="etiqueta-d">${formatoHora(n.fecha)} — ${n.salud_usuarios?.nombre||''}</span><span class="valor-d">${n.observaciones||'—'}</span></div>`).join('') || '<p style="font-size:12px; color:var(--gris);">Sin notas aún.</p>'}
-
-    <div class="modal-acciones">
-      <button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button>
-      ${h.estado==='activo' ? `<button class="btn btn-coral" onclick="abrirModalEgreso('${id}')">Dar de alta (egreso)</button>` : ''}
-    </div>
+    <h3>${h.salud_pacientes?.nombre||''}</h3>
+    <p style="font-size:11.5px; color:var(--gris); margin-bottom:12px;">${h.numero_expediente} · Sala ${h.sala||'—'}/Cama ${h.cama||'—'} · Ingreso: ${formatoHora(h.fecha_ingreso)} · ${h.estado==='activo'?'<span class="pill pill-ambar">Activo</span>':'<span class="pill pill-verde">Egresado</span>'}</p>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--linea);">${tabsHtml}</div>
+    <div>${contenido}</div>
+    <div class="modal-acciones"><button class="btn btn-fantasma" onclick="cerrarModal()">Cerrar</button></div>
   `);
 }
 
@@ -1903,7 +1988,7 @@ function abrirModalNotaEvolucion(hospId){
     <div class="campo"><label>Nota de transfusión (si aplica)</label><input id="nef-transfusion"></div>
     <div class="campo"><label>Plan de manejo</label><textarea id="nef-plan" rows="2"></textarea></div>
     <div class="modal-acciones">
-      <button class="btn btn-fantasma" onclick="verHospitalizacion('${hospId}')">Cancelar</button>
+      <button class="btn btn-fantasma" onclick="verHospitalizacion('${hospId}','evoluciones')">Cancelar</button>
       <button class="btn btn-primario" style="width:auto;" onclick="guardarNotaEvolucion('${hospId}')">Guardar</button>
     </div>
   `);
@@ -1921,7 +2006,7 @@ async function guardarNotaEvolucion(hospId){
   const { error } = await sb.from('salud_notas_evolucion').insert(registro);
   if(error){ mostrarToast('Error: '+error.message); return; }
   registrarAuditoria('crear', 'hospitalizacion', hospId, 'Nota de evolución');
-  mostrarToast('Nota agregada.'); verHospitalizacion(hospId);
+  mostrarToast('Nota agregada.'); verHospitalizacion(hospId, 'evoluciones');
 }
 
 function abrirModalOrdenMedica(hospId){
@@ -1931,7 +2016,7 @@ function abrirModalOrdenMedica(hospId){
     <div class="campo"><label>Dieta</label><input id="omf-dieta"></div>
     <div class="campo"><label>Estudios indicados</label><textarea id="omf-estudios" rows="2"></textarea></div>
     <div class="modal-acciones">
-      <button class="btn btn-fantasma" onclick="verHospitalizacion('${hospId}')">Cancelar</button>
+      <button class="btn btn-fantasma" onclick="verHospitalizacion('${hospId}','ordenes')">Cancelar</button>
       <button class="btn btn-primario" style="width:auto;" onclick="guardarOrdenMedica('${hospId}')">Guardar</button>
     </div>
   `);
@@ -1947,7 +2032,7 @@ async function guardarOrdenMedica(hospId){
   const { error } = await sb.from('salud_ordenes_medicas').insert(registro);
   if(error){ mostrarToast('Error: '+error.message); return; }
   registrarAuditoria('crear', 'hospitalizacion', hospId, 'Orden médica');
-  mostrarToast('Orden agregada.'); verHospitalizacion(hospId);
+  mostrarToast('Orden agregada.'); verHospitalizacion(hospId, 'ordenes');
 }
 
 function abrirModalEgreso(hospId){
@@ -1961,7 +2046,7 @@ function abrirModalEgreso(hospId){
       <div class="campo"><label>Fecha de seguimiento</label><input type="date" id="egf-seguimiento"></div>
     </div>
     <div class="modal-acciones">
-      <button class="btn btn-fantasma" onclick="verHospitalizacion('${hospId}')">Cancelar</button>
+      <button class="btn btn-fantasma" onclick="verHospitalizacion('${hospId}','egreso')">Cancelar</button>
       <button class="btn btn-primario" style="width:auto;" onclick="guardarEgreso('${hospId}')">Confirmar egreso</button>
     </div>
   `);
